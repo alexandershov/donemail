@@ -6,11 +6,6 @@ import smtplib
 
 
 def send_email(to, subject, message):
-    # TODO: send real email
-    print('sending email to={}, subject={}, message={}'.format(
-        to, subject, message
-    ))
-    return
     sender = 'donemail@example.com'
     msg = MIMEText(message)
     msg['To'] = to
