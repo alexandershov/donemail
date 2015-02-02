@@ -6,4 +6,7 @@ setup(
     author='Alexander Ershov',
     version='0.1.0',
     packages=find_packages(),
+    tests_require=[
+      'pytest',
+    ],
 )
