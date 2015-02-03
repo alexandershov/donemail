@@ -28,5 +28,11 @@ with donemail('test@example.com'):
 
 In command line:
 ```shell
-python -m donemail test@example.com sleep 10
+donemail test@example.com sleep 10
+```
+
+or:
+```shell
+# send email when pid 123 finishes
+donemail --pid 123 test@example.com
 ```
