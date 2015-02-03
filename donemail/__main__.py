@@ -1,3 +1,4 @@
+import argparse
 import os
 import subprocess
 import sys
@@ -6,23 +7,35 @@ import time
 from donemail import send_email
 
 
-# TODO: allow to watch pid to completion
 def main():
-    # TODO: check sys.argv and parse args with argparse
-    to = sys.argv[1]
-    if sys.argv[2].isdigit():
-        pid = int(sys.argv[2])
-        if not pid_exists(pid):
-            sys.exit('pid {:d} doesn\'t exist'.format(pid))
-        sys.stderr.write('waiting for pid {:d} to finish\n'.format(pid))
-        wait_pid(pid)
-        subject = 'pid {:d} exited'.format(pid)
+    parser = argparse.ArgumentParser(prog='donemail')
+    parser.add_argument('email', type=email)
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--pid', type=int)
+    group.add_argument('command', nargs='?')
+    parser.add_argument('command_args', nargs=argparse.REMAINDER)
+    args = parser.parse_args()
+
+    if args.pid is not None:
+        if not pid_exists(args.pid):
+            sys.exit('pid {:d} doesn\'t exist'.format(args.pid))
+        sys.stderr.write('waiting for pid {:d} to finish\n'.format(args.pid))
+        wait_pid(args.pid)
+        subject = 'pid {:d} exited'.format(args.pid)
     else:
         # TODO: send stdin and stderr if status_code != 0
-        status_code = subprocess.call(sys.argv[2:])
+        cmd = [args.command] + args.command_args
+        status_code = subprocess.call(cmd)
         subject = '{} exited with status_code = {:d}'.format(
-            ' '.join(sys.argv[2:]), status_code)
-    send_email(to, subject, '')
+            ' '.join(cmd), status_code)
+
+    send_email(args.email, subject, '')
+
+
+def email(s):
+    if '@' not in s:
+        raise ValueError('email should have @ in it. Got: <{}>'.format(s))
+    return s
 
 
 def pid_exists(pid):
