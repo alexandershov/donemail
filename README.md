@@ -13,7 +13,7 @@ As a decorator
 ```python
 from donemail import donemail
 
-@donemail('test@example.com')
+@donemail('bob@example.com')
 def long_running_function():
     sleep(10)
 ```
@@ -22,17 +22,17 @@ As a context manager:
 ```python
 from donemail import donemail
 
-with donemail('test@example.com'):
+with donemail('bob@example.com'):
     sleep(10)
 ```
 
 In command line:
 ```shell
-donemail test@example.com sleep 10
+donemail bob@example.com sleep 10
 ```
 
 or:
 ```shell
 # send email when pid 123 finishes
-donemail --pid 123 test@example.com
+donemail --pid 123 bob@example.com
 ```
