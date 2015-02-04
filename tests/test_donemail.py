@@ -18,10 +18,14 @@ class MockSendEmail(object):
 
 
 def test_context_manager():
-    assert len(donemail.send_email.sent_emails) == 0
+    assert_num_emails(0)
     with donemail.donemail(BOB):
         pass
-    assert len(donemail.send_email.sent_emails) == 1
+    assert_num_emails(1)
+
+
+def assert_num_emails(expected_num_emails):
+    assert len(donemail.send_email.sent_emails) == expected_num_emails
 
 
 def test_decorator():
@@ -29,7 +33,11 @@ def test_decorator():
     def add(x, y):
         return x + y
 
-    assert len(donemail.send_email.sent_emails) == 0
-    add(1, 2)
-    assert len(donemail.send_email.sent_emails) == 1
+    assert_num_emails(0)
+    add(1, y=2)
+    assert_num_emails(1)
+
+
+def test_context_manager_with_exception():
+    pass
 
