@@ -39,5 +39,20 @@ def test_decorator():
 
 
 def test_context_manager_with_exception():
-    pass
+    assert_num_emails(0)
+    with pytest.raises(ZeroDivisionError):
+        with donemail.donemail(BOB):
+            1 / 0
+    assert_num_emails(1)
+
+
+def test_decorator_with_exception():
+    @donemail.donemail(BOB)
+    def divide(x, y):
+        return x / y
+
+    assert_num_emails(0)
+    with pytest.raises(ZeroDivisionError):
+        divide(1, 0)
+    assert_num_emails(1)
 

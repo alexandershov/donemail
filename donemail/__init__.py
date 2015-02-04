@@ -9,6 +9,8 @@ import sys
 import time
 import errno
 
+# TODO: refactor everything
+
 
 def send_email(to, subject, message):
     sender = 'donemail@example.com'
@@ -30,16 +32,24 @@ class donemail(object):
     def __call__(self, function):
         @wraps(function)
         def donemail_function(*args, **kwargs):
-            result = function(*args, **kwargs)
-            # TODO: catch, send, and reraise exceptions
+            raised = False
+            try:
+                result = function(*args, **kwargs)
+            except Exception as exc:
+                raised = True
+                exc_type, exc_value, tb = sys.exc_info()
+                result = exc
             if not self._subject:
-                subject = '{function}({args}) returned {result!r}'.format(
+                subject = '{function}({args}) {status} {result!r}'.format(
                     function=function.__name__,
                     args=format_call_args(args, kwargs),
+                    status='raised' if raised else 'returned',
                     result=result)
             else:
                 subject = self._subject
             send_email(self._to, subject, self._message)
+            if raised:
+                raise exc_type, exc_value, tb.tb_next
             return result
 
         return donemail_function
@@ -48,8 +58,11 @@ class donemail(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # TODO: send exception info
-        send_email(self._to, self._subject or 'done', self._message)
+        if exc_val is not None:
+            subject = 'raised an exception {!r}'.format(exc_val)
+        else:
+            subject = 'done'
+        send_email(self._to, self._subject or subject, self._message)
 
 
 def main():
