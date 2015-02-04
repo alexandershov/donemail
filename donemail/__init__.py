@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import time
+import errno
 
 
 def send_email(to, subject, message):
@@ -86,9 +87,11 @@ def pid_exists(pid):
     try:
         os.kill(pid, 0)
         return True
-    # TODO: check OSError.errno to handle case when we don't have permission
-    # to send a signal to pid
-    except OSError:
+    except OSError as exc:
+        if exc.errno == errno.ESRCH: # no such process
+            return False
+        elif exc.errno == errno.EPERM: # process exists, but is not killable
+            return True
         return False
 
 
