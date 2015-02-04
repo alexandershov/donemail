@@ -54,11 +54,14 @@ class donemail(object):
 
 def main():
     parser = argparse.ArgumentParser(prog='donemail')
-    parser.add_argument('email', type=email)
+    parser.add_argument('email', type=email, help='address to send email to')
+    parser.add_argument('--subject', help='subject of the email')
+    parser.add_argument('--message', help='message of the email')
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--pid', type=int)
-    group.add_argument('command', nargs='?')
-    parser.add_argument('command_args', nargs=argparse.REMAINDER)
+    group.add_argument('--pid', type=int, help='pid to wait for')
+    group.add_argument('command', nargs='?', help='command to execute')
+    parser.add_argument('command_args', nargs=argparse.REMAINDER,
+                        help='command arguments')
     args = parser.parse_args()
 
     if args.pid is not None:
@@ -74,7 +77,7 @@ def main():
         subject = '{} exited with the code = {:d}'.format(
             ' '.join(cmd), status_code)
 
-    send_email(args.email, subject, '')
+    send_email(args.email, args.subject or subject, args.message)
 
 
 def email(s):
@@ -88,9 +91,9 @@ def pid_exists(pid):
         os.kill(pid, 0)
         return True
     except OSError as exc:
-        if exc.errno == errno.ESRCH: # no such process
+        if exc.errno == errno.ESRCH:  # no such process
             return False
-        elif exc.errno == errno.EPERM: # process exists, but is not killable
+        elif exc.errno == errno.EPERM:  # process exists, but is not killable
             return True
         return False
 
