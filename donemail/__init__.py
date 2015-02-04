@@ -21,24 +21,24 @@ def send_email(to, subject, message):
 
 
 class donemail(object):
-    # TODO: add subject and message args
-    def __init__(self, to, subject=None):
+    def __init__(self, to, subject='', message=''):
         self._to = to
         self._subject = subject
+        self._message = message
 
     def __call__(self, function):
         @wraps(function)
         def donemail_function(*args, **kwargs):
             result = function(*args, **kwargs)
             # TODO: catch, send, and reraise exceptions
-            if self._subject is None:
+            if not self._subject:
                 subject = '{function}({args}) returned {result!r}'.format(
                     function=function.__name__,
                     args=format_call_args(args, kwargs),
                     result=result)
             else:
                 subject = self._subject
-            send_email(self._to, subject, '')
+            send_email(self._to, subject, self._message)
             return result
 
         return donemail_function
@@ -48,7 +48,7 @@ class donemail(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # TODO: send exception info
-        send_email(self._to, self._subject or None, '')
+        send_email(self._to, self._subject or 'done', self._message)
 
 
 def main():
