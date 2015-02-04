@@ -1,6 +1,5 @@
 ## What is it?
-Donemail sends an email to the specified address when some 
-function/code/script finishes execution.
+Donemail sends you an email when some function/code/script completes.
 
 ## Install
 ```shell
@@ -9,6 +8,8 @@ cd donemail && python setup.py install
 ```
 
 ## Usage
+You need a SMTP server running on port 25.
+
 As a decorator
 ```python
 from donemail import donemail
