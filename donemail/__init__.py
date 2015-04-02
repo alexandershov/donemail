@@ -4,30 +4,23 @@ from itertools import starmap, chain
 import smtplib
 import argparse
 import os
+import socket
 import subprocess
 import sys
 import time
 import errno
 
 # TODO: refactor everything
+# TODO: write docstrings
 
-
-def send_email(to, subject, message):
-    sender = 'donemail@example.com'
-    msg = MIMEText(message)
-    msg['To'] = to
-    msg['From'] = sender
-    msg['Subject'] = subject
-    s = smtplib.SMTP('localhost')
-    s.sendmail(sender, [to], msg.as_string())
-    s.quit()
 
 
 class donemail(object):
-    def __init__(self, to, subject='', message=''):
+    def __init__(self, to, subject='', message='', sender=None):
         self._to = to
         self._subject = subject
         self._message = message
+        self._sender = sender or 'donemail@{}'.format(socket.gethostname())
 
     def __call__(self, function):
         @wraps(function)
@@ -47,7 +40,7 @@ class donemail(object):
                     result=result)
             else:
                 subject = self._subject
-            send_email(self._to, subject, self._message)
+            self.send_email(subject)
             if raised:
                 raise exc_type, exc_value, tb.tb_next
             return result
@@ -62,7 +55,16 @@ class donemail(object):
             subject = 'raised an exception {!r}'.format(exc_val)
         else:
             subject = 'done'
-        send_email(self._to, self._subject or subject, self._message)
+        self.send_email(subject)
+
+    def send_email(self, subject=''):
+        msg = MIMEText(self._message)
+        msg['To'] = self._to
+        msg['From'] = self._sender
+        msg['Subject'] = self._subject or subject
+        s = smtplib.SMTP('localhost')
+        s.sendmail(self._sender, [self._to], msg.as_string())
+        s.quit()
 
 
 def main():
@@ -89,8 +91,7 @@ def main():
         status_code = subprocess.call(cmd)
         subject = '{} exited with the code = {:d}'.format(
             ' '.join(cmd), status_code)
-
-    send_email(args.email, args.subject or subject, args.message)
+    donemail(to=args.email, message=args.message, subject=(args.subject or subject)).send_email()
 
 
 def email(s):

@@ -6,15 +6,15 @@ BOB = 'bob@example.com'
 
 @pytest.fixture(autouse=True)
 def monkeypatch_send_email(monkeypatch):
-    monkeypatch.setattr('donemail.send_email', MockSendEmail())
+    monkeypatch.setattr('donemail.donemail.send_email', MockSendEmail())
 
 
 class MockSendEmail(object):
     def __init__(self):
         self.sent_emails = []
 
-    def __call__(self, to, subject, message):
-        self.sent_emails.append((to, subject, message))
+    def __call__(self, *args):
+        self.sent_emails.append(args)
 
 
 def test_context_manager():
@@ -25,7 +25,7 @@ def test_context_manager():
 
 
 def assert_num_emails(expected_num_emails):
-    assert len(donemail.send_email.sent_emails) == expected_num_emails
+    assert len(donemail.donemail.send_email.sent_emails) == expected_num_emails
 
 
 def test_decorator():
