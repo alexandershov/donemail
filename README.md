@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/alexandershov/donemail.svg?branch=master)](https://travis-ci.org/alexandershov/donemail)
 ## What is it?
 Donemail sends you an email when some function/code/script completes.
 
