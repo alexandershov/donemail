@@ -16,7 +16,7 @@ import errno
 
 
 class donemail(object):
-    def __init__(self, to, subject='', message='', sender=None):
+    def __init__(self, to, sender='', subject='', message=''):
         self._to = to
         self._subject = subject
         self._message = message
@@ -57,11 +57,11 @@ class donemail(object):
             subject = 'done'
         self.send_email(subject)
 
-    def send_email(self, subject=''):
-        msg = MIMEText(self._message)
+    def send_email(self, subject='', message=''):
+        msg = MIMEText(message or self._message)
         msg['To'] = self._to
         msg['From'] = self._sender
-        msg['Subject'] = self._subject or subject
+        msg['Subject'] = subject or self._subject
         s = smtplib.SMTP('localhost')
         s.sendmail(self._sender, [self._to], msg.as_string())
         s.quit()
