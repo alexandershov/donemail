@@ -1,3 +1,4 @@
+from mock import Mock
 import pytest
 
 from donemail import donemail
@@ -7,15 +8,7 @@ BOB = 'bob@example.com'
 
 @pytest.fixture(autouse=True)
 def monkeypatch_send_email(monkeypatch):
-    monkeypatch.setattr(donemail, 'send_email', MockSendEmail())
-
-
-class MockSendEmail(object):
-    def __init__(self):
-        self.sent_emails = []
-
-    def __call__(self, *args):
-        self.sent_emails.append(args)
+    monkeypatch.setattr(donemail, 'send_email', Mock())
 
 
 def test_context_manager():
@@ -26,7 +19,7 @@ def test_context_manager():
 
 
 def assert_num_emails(expected_num_emails):
-    assert len(donemail.send_email.sent_emails) == expected_num_emails
+    assert donemail.send_email.call_count == expected_num_emails
 
 
 def test_decorator():
