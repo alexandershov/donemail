@@ -91,7 +91,8 @@ def main():
         status_code = subprocess.call(cmd)
         subject = '{} exited with the code = {:d}'.format(
             ' '.join(cmd), status_code)
-    donemail(to=args.email, message=args.message, subject=(args.subject or subject)).send_email()
+    donemail(to=args.email, message=args.message,
+             subject=(args.subject or subject)).send_email()
 
 
 def email(s):
