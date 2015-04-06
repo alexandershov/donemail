@@ -1,5 +1,6 @@
 from mock import Mock
 import pytest
+import smtplib
 
 from donemail import donemail
 
@@ -8,7 +9,7 @@ BOB = 'bob@example.com'
 
 @pytest.fixture(autouse=True)
 def monkeypatch_send_email(monkeypatch):
-    monkeypatch.setattr(donemail, 'send_email', Mock())
+    monkeypatch.setattr('smtplib.SMTP', Mock())
 
 
 def test_context_manager():
@@ -19,7 +20,7 @@ def test_context_manager():
 
 
 def assert_num_emails(expected_num_emails):
-    assert donemail.send_email.call_count == expected_num_emails
+    assert smtplib.SMTP.return_value.sendmail.call_count == expected_num_emails
 
 
 def test_decorator():
