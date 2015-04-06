@@ -97,7 +97,8 @@ def main():
 
 def email(s):
     if '@' not in s:
-        raise ValueError('email should have @ in it. Got: <{}>'.format(s))
+        raise argparse.ArgumentTypeError(
+            'email should contain @. Got: {!r}'.format(s))
     return s
 
 
