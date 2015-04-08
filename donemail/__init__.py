@@ -121,6 +121,7 @@ def wait_pid(pid, poll_interval_sec=5):
 
 
 def format_call_args(args, kwargs):
-    pos_args_part = map('{!r}'.format, args)
-    kw_args_part = starmap('{}={!r}'.format, kwargs.iteritems())
-    return ', '.join(chain(pos_args_part, kw_args_part))
+    args_part = map(repr, args)
+    kwargs_part = ['{}={!r}'.format(name, value)
+                   for name, value in kwargs.viewitems()]
+    return ', '.join(chain(args_part, kwargs_part))
