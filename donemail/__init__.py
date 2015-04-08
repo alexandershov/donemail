@@ -59,6 +59,7 @@ class donemail(object):
 
     def send_email(self, subject='', message=''):
         msg = MIMEText(message or self._message)
+        # TODO: do we need both msg['To'] and sendmail(..., [self._to], ...)?
         msg['To'] = self._to
         msg['From'] = self._sender
         msg['Subject'] = subject or self._subject
