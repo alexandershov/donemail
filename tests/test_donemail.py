@@ -41,13 +41,14 @@ def get_mock_smtp():
 
 
 def test_decorator():
-    @donemail(BOB)
-    def add(x, y):
-        return x + y
-
     assert_num_emails(0)
     add(1, y=2)
     assert_sent_email(to_addrs=[BOB], subject='add(1, y=2) returned 3')
+
+
+@donemail(BOB)
+def add(x, y):
+    return x + y
 
 
 def test_context_manager_with_exception():
