@@ -41,6 +41,7 @@ def get_mock_smtp():
 
 
 def test_decorator():
+    # TODO: remove assert_num_emails(0) from all tests
     assert_num_emails(0)
     add(1, y=2)
     assert_sent_email(to_addrs=[BOB], subject='add(1, y=2) returned 3')
@@ -49,6 +50,29 @@ def test_decorator():
 @donemail(BOB)
 def add(x, y):
     return x + y
+
+
+def test_decorator_exception():
+    with pytest.raises(TypeError):
+        add(1, '2')
+    assert_sent_email(to_addrs=[BOB],
+                      subject='add(1, \'2\') raised TypeError',
+                      # checking that message ignores decorator frame
+                      message=~contains('donemail_function'))
+
+
+class contains(object):
+    def __init__(self, substring, inverted=False):
+        self._substring = substring
+        self._inverted = inverted
+
+    def __invert__(self):
+        return contains(self._substring, inverted=not self._inverted)
+
+    def __eq__(self, other):
+        if self._inverted:
+            return self._substring not in other
+        return self._substring in other
 
 
 def test_context_manager_with_exception():

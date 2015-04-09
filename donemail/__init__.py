@@ -12,7 +12,7 @@ import errno
 
 # TODO: refactor everything
 # TODO: write docstrings
-
+import traceback
 
 
 class donemail(object):
@@ -25,23 +25,23 @@ class donemail(object):
     def __call__(self, function):
         @wraps(function)
         def donemail_function(*args, **kwargs):
+            call_str = '{function}({args})'.format(
+                function=function.__name__, args=format_call_args(args, kwargs))
             raised = False
             try:
                 result = function(*args, **kwargs)
+                subject = '{} returned {!r}'.format(call_str, result)
+                message = ''
             except Exception as exc:
                 raised = True
                 exc_type, exc_value, tb = sys.exc_info()
-                result = exc
-            if not self._subject:
-                subject = '{function}({args}) {status} {result!r}'.format(
-                    function=function.__name__,
-                    args=format_call_args(args, kwargs),
-                    status='raised' if raised else 'returned',
-                    result=result)
-            else:
-                subject = self._subject
-            self.send_email(subject)
+                subject = '{} raised {}'.format(call_str, exc_type.__name__)
+                # tb_next is to hide the fact that we're inside of the decorator
+                message = '\n'.join(traceback.format_tb(tb.tb_next))
+            self.send_email(self._subject or subject,
+                            self._message or message)
             if raised:
+                # tb_next is to hide the fact that we're inside of the decorator
                 raise exc_type, exc_value, tb.tb_next
             return result
 
