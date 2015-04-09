@@ -30,11 +30,8 @@ def assert_num_emails(expected_num_emails):
 def assert_sent_email(from_addr=ANY, to_addrs=ANY, subject=ANY, message=ANY):
     mock_smtp = get_mock_smtp()
     mock_smtp.sendmail.assert_called_once_with(from_addr, to_addrs, ANY)
-    actual_from_addr, actual_to_addrs, mime_string = \
-    mock_smtp.sendmail.call_args[0]
+    _, _, mime_string = mock_smtp.sendmail.call_args[0]
     mime_message = email.message_from_string(mime_string)
-    assert from_addr == actual_from_addr
-    assert to_addrs == actual_to_addrs
     assert subject == mime_message['Subject']
     assert message == mime_message.get_payload()
 
