@@ -17,7 +17,6 @@ def monkeypatch_smtplib(monkeypatch):
 
 
 def test_context_manager():
-    assert_num_emails(0)
     with donemail(BOB):
         pass
     assert_sent_email(to_addrs=[BOB])
@@ -41,8 +40,6 @@ def get_mock_smtp():
 
 
 def test_decorator():
-    # TODO: remove assert_num_emails(0) from all tests
-    assert_num_emails(0)
     add(1, y=2)
     assert_sent_email(to_addrs=[BOB], subject='add(1, y=2) returned 3')
 
@@ -76,7 +73,6 @@ class contains(object):
 
 
 def test_context_manager_with_exception():
-    assert_num_emails(0)
     with pytest.raises(ZeroDivisionError):
         with donemail(BOB):
             1 / 0
@@ -88,7 +84,6 @@ def test_decorator_with_exception():
     def divide(x, y):
         return x / y
 
-    assert_num_emails(0)
     with pytest.raises(ZeroDivisionError):
         divide(1, 0)
     assert_sent_email(to_addrs=[BOB])
