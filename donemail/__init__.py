@@ -53,9 +53,12 @@ class donemail(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
             subject = 'raised an exception {!r}'.format(exc_val)
+            message = ''
         else:
-            subject = 'done'
-        self.send_email(subject)
+            # TODO: clean up every self._subject or '' and '' or self._subject
+            subject = self._subject or 'done'
+            message = self._message or ''
+        self.send_email(subject, message)
 
     def send_email(self, subject='', message=''):
         msg = MIMEText(message or self._message)

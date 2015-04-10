@@ -22,6 +22,12 @@ def test_context_manager():
     assert_sent_email(to_addrs=[BOB])
 
 
+def test_context_manager_subject_message():
+    with donemail(BOB, subject='pytest', message='it works!'):
+        pass
+    assert_sent_email(to_addrs=[BOB], subject='pytest', message='it works!')
+
+
 def assert_num_emails(expected_num_emails):
     assert get_mock_smtp().sendmail.call_count == expected_num_emails
 
