@@ -50,6 +50,15 @@ def test_decorator():
     assert_sent_email(to_addrs=[BOB], subject='add(1, y=2) returned 3')
 
 
+def test_decorator_subject_message():
+    @donemail(BOB, subject='pytest', message='it works!')
+    def mul(x, y):
+        return x * y
+
+    mul(1, y=2)
+    assert_sent_email(to_addrs=[BOB], subject='pytest', message='it works!')
+
+
 @donemail(BOB)
 def add(x, y):
     return x + y
