@@ -37,7 +37,7 @@ class donemail(object):
                 exc_type, exc_value, tb = sys.exc_info()
                 subject = '{} raised {}'.format(call_str, exc_type.__name__)
                 # tb_next is to hide the fact that we're inside of the decorator
-                message = '\n'.join(traceback.format_tb(tb.tb_next))
+                message = '\n'.join(traceback.format_exception(exc_type, exc_value, tb.tb_next))
             self.send_email(self._subject or subject,
                             self._message or message)
             if raised:
@@ -52,8 +52,8 @@ class donemail(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
-            subject = 'raised an exception {!r}'.format(exc_val)
-            message = ''
+            subject = 'block raised {}'.format(exc_type.__name__)
+            message = '\n'.join(traceback.format_exception(exc_type, exc_val, exc_tb))
         else:
             # TODO: clean up every self._subject or '' and '' or self._subject
             subject = self._subject or 'done'

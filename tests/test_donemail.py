@@ -16,6 +16,21 @@ def monkeypatch_smtplib(monkeypatch):
     monkeypatch.setattr('smtplib.SMTP', mock_smtp_class)
 
 
+@donemail(BOB)
+def add(x, y):
+    return x + y
+
+
+@donemail(BOB, subject='pytest', message='it works!')
+def mul(x, y):
+    return x * y
+
+
+@pytest.fixture(params=[add, mul])
+def donemailed_function(request):
+    return request.param
+
+
 def test_context_manager():
     with donemail(BOB):
         pass
@@ -51,26 +66,18 @@ def test_decorator():
 
 
 def test_decorator_subject_message():
-    @donemail(BOB, subject='pytest', message='it works!')
-    def mul(x, y):
-        return x * y
-
     mul(1, y=2)
     assert_sent_email(to_addrs=[BOB], subject='pytest', message='it works!')
 
 
-@donemail(BOB)
-def add(x, y):
-    return x + y
-
-
-def test_decorator_exception():
+def test_decorator_exception(donemailed_function):
     with pytest.raises(TypeError):
-        add(1, '2')
+        add(1, None)
     assert_sent_email(to_addrs=[BOB],
-                      subject='add(1, \'2\') raised TypeError',
+                      subject='add(1, None) raised TypeError',
                       # checking that message ignores decorator frame
                       message=~contains('donemail_function'))
+    assert_sent_email(message=contains('TypeError'))
 
 
 class contains(object):
@@ -81,17 +88,19 @@ class contains(object):
     def __invert__(self):
         return contains(self._substring, inverted=not self._inverted)
 
-    def __eq__(self, other):
+    def __eq__(self, string):
         if self._inverted:
-            return self._substring not in other
-        return self._substring in other
+            return self._substring not in string
+        return self._substring in string
 
 
-def test_context_manager_with_exception():
+def test_context_manager_exception():
     with pytest.raises(ZeroDivisionError):
-        with donemail(BOB):
+        with donemail(BOB, subject='pytest', message='it works!'):
             1 / 0
-    assert_sent_email(to_addrs=[BOB])
+    assert_sent_email(to_addrs=[BOB],
+                      subject='block raised ZeroDivisionError',
+                      message=contains('ZeroDivisionError'))
 
 
 def test_decorator_with_exception():
