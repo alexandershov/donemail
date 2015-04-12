@@ -1,6 +1,6 @@
 from email.mime.text import MIMEText
 from functools import wraps
-from itertools import starmap, chain
+from itertools import chain
 import smtplib
 import argparse
 import os
@@ -8,18 +8,17 @@ import socket
 import subprocess
 import sys
 import time
+import traceback
 import errno
 
 # TODO: refactor everything
 # TODO: write docstrings
-import traceback
-
 
 class donemail(object):
-    def __init__(self, to, sender='', subject='', message=''):
+    def __init__(self, to, sender='', subject='', body=''):
         self._to = to
         self._subject = subject
-        self._message = message
+        self._body = body
         self._sender = sender or 'donemail@{}'.format(socket.gethostname())
 
     def __call__(self, function):
@@ -31,15 +30,15 @@ class donemail(object):
             try:
                 result = function(*args, **kwargs)
                 subject = '{} returned {!r}'.format(call_str, result)
-                message = ''
+                body = ''
             except Exception as exc:
                 raised = True
                 exc_type, exc_value, tb = sys.exc_info()
                 subject = '{} raised {}'.format(call_str, exc_type.__name__)
                 # tb_next is to hide the fact that we're inside of the decorator
-                message = '\n'.join(traceback.format_exception(exc_type, exc_value, tb.tb_next))
+                body = '\n'.join(traceback.format_exception(exc_type, exc_value, tb.tb_next))
             self.send_email(self._subject or subject,
-                            self._message or message)
+                            self._body or body)
             if raised:
                 # tb_next is to hide the fact that we're inside of the decorator
                 raise exc_type, exc_value, tb.tb_next
@@ -53,15 +52,15 @@ class donemail(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
             subject = 'block raised {}'.format(exc_type.__name__)
-            message = '\n'.join(traceback.format_exception(exc_type, exc_val, exc_tb))
+            body = '\n'.join(traceback.format_exception(exc_type, exc_val, exc_tb))
         else:
             # TODO: clean up every self._subject or '' and '' or self._subject
             subject = self._subject or 'done'
-            message = self._message or ''
-        self.send_email(subject, message)
+            body = self._body or ''
+        self.send_email(subject, body)
 
-    def send_email(self, subject='', message=''):
-        msg = MIMEText(message or self._message)
+    def send_email(self, subject='', body=''):
+        msg = MIMEText(body or self._body)
         # TODO: do we need both msg['To'] and sendmail(..., [self._to], ...)?
         msg['To'] = self._to
         msg['From'] = self._sender
@@ -75,7 +74,7 @@ def main():
     parser = argparse.ArgumentParser(prog='donemail')
     parser.add_argument('email', type=email, help='address to send email to')
     parser.add_argument('--subject', help='subject of the email')
-    parser.add_argument('--message', help='message of the email')
+    parser.add_argument('--body', help='body of the email')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--pid', type=int, help='pid to wait for')
     group.add_argument('command', nargs='?', help='command to execute')
@@ -95,7 +94,7 @@ def main():
         status_code = subprocess.call(cmd)
         subject = '{} exited with the code = {:d}'.format(
             ' '.join(cmd), status_code)
-    donemail(to=args.email, message=args.message,
+    donemail(to=args.email, body=args.body,
              subject=(args.subject or subject)).send_email()
 
 
