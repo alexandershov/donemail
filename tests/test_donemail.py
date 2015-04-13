@@ -1,10 +1,13 @@
 import email
 import smtplib
+import subprocess
+import sys
+import threading
 
 from mock import ANY, Mock
 import pytest
 
-from donemail import donemail
+from donemail import donemail, main
 
 BOB = 'bob@example.com'
 
@@ -112,3 +115,14 @@ def test_decorator_with_exception():
         divide(1, 0)
     assert_sent_email(to_addrs=[BOB])
 
+
+# TODO: move this test as integration
+# TODO: restore sys.argv to the old value (using monkeypatch or whatever)
+def test_wait_pid():
+    process = subprocess.Popen(['sleep', '0.5'])
+    sys.argv = ['', '--pid', str(process.pid), BOB]
+    waiting_thread = threading.Thread(target=main)
+    waiting_thread.start()
+    process.wait()
+    waiting_thread.join()
+    assert_sent_email(to_addrs=[BOB])
