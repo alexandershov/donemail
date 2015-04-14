@@ -1,7 +1,6 @@
 import email
 import smtplib
 import subprocess
-import sys
 import threading
 
 from mock import ANY, Mock
@@ -117,10 +116,10 @@ def test_decorator_with_exception():
 
 
 # TODO: move this test as integration
-# TODO: restore sys.argv to the old value (using monkeypatch or whatever)
-def test_wait_pid():
+def test_wait_pid(monkeypatch):
     process = subprocess.Popen(['sleep', '0.5'])
-    sys.argv = ['', '--pid', str(process.pid), BOB]
+    monkeypatch.setattr('sys.argv',
+                        ['', '--pid', str(process.pid), BOB])
     waiting_thread = threading.Thread(target=main)
     waiting_thread.start()
     process.wait()
