@@ -87,7 +87,7 @@ def main():
             sys.exit('pid {:d} doesn\'t exist'.format(args.pid))
         sys.stderr.write('waiting for pid {:d} to finish\n'.format(args.pid))
         wait_pid(args.pid)
-        subject = 'pid {:d} exited'.format(args.pid)
+        subject = 'process with pid {:d} exited'.format(args.pid)
     else:
         # TODO: send stdin and stderr if status_code != 0
         cmd = [args.command] + args.command_args
@@ -117,7 +117,8 @@ def pid_exists(pid):
         return False
 
 
-def wait_pid(pid, poll_interval_sec=5):
+# TODO: make poll_interval_sec a command-line option
+def wait_pid(pid, poll_interval_sec=1):
     while pid_exists(pid):
         time.sleep(poll_interval_sec)
 

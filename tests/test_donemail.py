@@ -115,13 +115,32 @@ def test_decorator_with_exception():
     assert_sent_email(to_addrs=[BOB])
 
 
-# TODO: move this test as integration
-def test_wait_pid(monkeypatch):
-    process = subprocess.Popen(['sleep', '0.5'])
-    monkeypatch.setattr('sys.argv',
-                        ['', '--pid', str(process.pid), BOB])
+# TODO: move these tests to a separate (integration) directory
+
+@pytest.fixture
+def process():
+    return subprocess.Popen(['sleep', '0.5'])
+
+
+def test_wait_pid(monkeypatch, process):
+    assert_waits_and_sends(monkeypatch, process,
+                           ['', '--pid', str(process.pid), BOB],
+                           to_addrs=[BOB],
+                           subject='process with pid {:d} exited'.format(process.pid))
+
+
+def assert_waits_and_sends(monkeypatch, process, argv, **expected_email_attrs):
+    monkeypatch.setattr('sys.argv', argv)
     waiting_thread = threading.Thread(target=main)
     waiting_thread.start()
     process.wait()
     waiting_thread.join()
-    assert_sent_email(to_addrs=[BOB])
+    assert_sent_email(**expected_email_attrs)
+
+
+def test_wait_pid_subject_body(monkeypatch, process):
+    assert_waits_and_sends(monkeypatch, process,
+                           ['', '--pid', str(process.pid),
+                            '--subject', 'pytest',
+                            '--body', 'it works!', BOB],
+                           to_addrs=[BOB], subject='pytest', body='it works!')
