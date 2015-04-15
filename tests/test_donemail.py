@@ -129,13 +129,12 @@ def test_wait_pid(monkeypatch, process):
                       subject='process with pid {:d} exited'.format(process.pid))
 
 
-def run_and_wait(monkeypatch, process, argv, **expected_email_attrs):
+def run_and_wait(monkeypatch, process, argv):
     monkeypatch.setattr('sys.argv', argv)
     waiting_thread = threading.Thread(target=main)
     waiting_thread.start()
     process.wait()
     waiting_thread.join()
-    assert_sent_email(**expected_email_attrs)
 
 
 def test_wait_pid_subject_body(monkeypatch, process):
@@ -144,3 +143,10 @@ def test_wait_pid_subject_body(monkeypatch, process):
                   '--subject', 'pytest',
                   '--body', 'it works!', BOB])
     assert_sent_email(to_addrs=[BOB], subject='pytest', body='it works!')
+
+
+def test_wait_pid_that_doesnt_exist(monkeypatch):
+    pid_that_doesnt_exist = 2 ** 31 - 1
+    run_and_wait(monkeypatch, Mock(),
+                 ['', '--pid', str(pid_that_doesnt_exist), BOB])
+    assert_num_emails(0)
