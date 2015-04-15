@@ -123,13 +123,13 @@ def process():
 
 
 def test_wait_pid(monkeypatch, process):
-    assert_waits_and_sends(monkeypatch, process,
-                           ['', '--pid', str(process.pid), BOB],
-                           to_addrs=[BOB],
-                           subject='process with pid {:d} exited'.format(process.pid))
+    run_and_wait(monkeypatch, process,
+                 ['', '--pid', str(process.pid), BOB])
+    assert_sent_email(to_addrs=[BOB],
+                      subject='process with pid {:d} exited'.format(process.pid))
 
 
-def assert_waits_and_sends(monkeypatch, process, argv, **expected_email_attrs):
+def run_and_wait(monkeypatch, process, argv, **expected_email_attrs):
     monkeypatch.setattr('sys.argv', argv)
     waiting_thread = threading.Thread(target=main)
     waiting_thread.start()
@@ -139,8 +139,8 @@ def assert_waits_and_sends(monkeypatch, process, argv, **expected_email_attrs):
 
 
 def test_wait_pid_subject_body(monkeypatch, process):
-    assert_waits_and_sends(monkeypatch, process,
-                           ['', '--pid', str(process.pid),
-                            '--subject', 'pytest',
-                            '--body', 'it works!', BOB],
-                           to_addrs=[BOB], subject='pytest', body='it works!')
+    run_and_wait(monkeypatch, process,
+                 ['', '--pid', str(process.pid),
+                  '--subject', 'pytest',
+                  '--body', 'it works!', BOB])
+    assert_sent_email(to_addrs=[BOB], subject='pytest', body='it works!')
