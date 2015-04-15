@@ -147,6 +147,7 @@ def test_wait_pid_subject_body(monkeypatch, process):
 
 def test_wait_pid_that_doesnt_exist(monkeypatch):
     pid_that_doesnt_exist = 2 ** 31 - 1
-    run_and_wait(monkeypatch, Mock(),
-                 ['', '--pid', str(pid_that_doesnt_exist), BOB])
+    run_and_wait(monkeypatch,
+                 process=Mock(),
+                 argv=['', '--pid', str(pid_that_doesnt_exist), BOB])
     assert_num_emails(0)
