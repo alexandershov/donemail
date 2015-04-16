@@ -70,7 +70,7 @@ class donemail(object):
         s.quit()
 
 
-def main():
+def main(cmd_args=None):
     parser = argparse.ArgumentParser(prog='donemail')
     parser.add_argument('email', type=email, help='address to send email to')
     parser.add_argument('--subject', help='subject of the email')
@@ -80,7 +80,7 @@ def main():
     group.add_argument('command', nargs='?', help='command to execute')
     parser.add_argument('command_args', nargs=argparse.REMAINDER,
                         help='command arguments')
-    args = parser.parse_args()
+    args = parser.parse_args(cmd_args)
 
     if args.pid is not None:
         if not pid_exists(args.pid):

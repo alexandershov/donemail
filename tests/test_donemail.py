@@ -4,7 +4,6 @@ import subprocess
 import threading
 
 from mock import ANY, Mock
-from _pytest.monkeypatch import monkeypatch
 import pytest
 
 from donemail import donemail, main
@@ -125,26 +124,21 @@ def process():
 
 def test_wait_pid(process):
     run_and_wait(process,
-                 ['', '--pid', str(process.pid), BOB])
+                 ['--pid', str(process.pid), BOB])
     assert_sent_email(to_addrs=[BOB],
                       subject='process with pid {:d} exited'.format(process.pid))
 
 
-def run_and_wait(process, argv):
-    try:
-        patch = monkeypatch()
-        patch.setattr('sys.argv', argv)
-        waiting_thread = threading.Thread(target=main)
-        waiting_thread.start()
-        process.wait()
-        waiting_thread.join()
-    finally:
-        patch.undo()
+def run_and_wait(process, args):
+    waiting_thread = threading.Thread(target=main, args=[args])
+    waiting_thread.start()
+    process.wait()
+    waiting_thread.join()
 
 
 def test_wait_pid_subject_body(process):
     run_and_wait(process,
-                 ['', '--pid', str(process.pid),
+                 ['--pid', str(process.pid),
                   '--subject', 'pytest',
                   '--body', 'it works!', BOB])
     assert_sent_email(to_addrs=[BOB], subject='pytest', body='it works!')
@@ -153,16 +147,16 @@ def test_wait_pid_subject_body(process):
 def test_wait_pid_that_doesnt_exist():
     pid_that_doesnt_exist = 2 ** 31 - 1
     run_and_wait(process=Mock(),
-                 argv=['', '--pid', str(pid_that_doesnt_exist), BOB])
+                 args=['', '--pid', str(pid_that_doesnt_exist), BOB])
     assert_num_emails(0)
 
 
-@pytest.mark.parametrize('argv, email_attrs', [
-    (['', BOB, 'true'], dict(to_addrs=[BOB], subject='`true` exited with status code 0')),
-    (['', BOB, 'false'], dict(to_addrs=[BOB], subject='`false` exited with status code 1')),
-    (['', '--subject', 'pytest', '--body', 'it works!', BOB, 'true'],
+@pytest.mark.parametrize('args, email_attrs', [
+    ([BOB, 'true'], dict(to_addrs=[BOB], subject='`true` exited with status code 0')),
+    ([BOB, 'false'], dict(to_addrs=[BOB], subject='`false` exited with status code 1')),
+    (['--subject', 'pytest', '--body', 'it works!', BOB, 'true'],
      dict(to_addrs=[BOB], subject='pytest', body='it works!')),
 ])
-def test_run(argv, email_attrs):
-    run_and_wait(process=Mock(), argv=argv)
+def test_run(args, email_attrs):
+    run_and_wait(process=Mock(), args=args)
     assert_sent_email(**email_attrs)
