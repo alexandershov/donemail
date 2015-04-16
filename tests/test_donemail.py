@@ -157,21 +157,12 @@ def test_wait_pid_that_doesnt_exist():
     assert_num_emails(0)
 
 
-# TODO: DRY test_run_* up
-
-def test_run_true():
-    run_and_wait(process=Mock(),
-                 argv=['', BOB, 'true'])
-    assert_sent_email(to_addrs=[BOB], subject='`true` exited with status code 0')
-
-
-def test_run_false():
-    run_and_wait(process=Mock(),
-                 argv=['', BOB, 'false'])
-    assert_sent_email(to_addrs=[BOB], subject='`false` exited with status code 1')
-
-
-def test_run_subject_body():
-    run_and_wait(process=Mock(),
-                 argv=['', '--subject', 'pytest', '--body', 'it works!', BOB, 'true'])
-    assert_sent_email(to_addrs=[BOB], subject='pytest', body='it works!')
+@pytest.mark.parametrize('argv, email_attrs', [
+    (['', BOB, 'true'], dict(to_addrs=[BOB], subject='`true` exited with status code 0')),
+    (['', BOB, 'false'], dict(to_addrs=[BOB], subject='`false` exited with status code 1')),
+    (['', '--subject', 'pytest', '--body', 'it works!', BOB, 'true'],
+     dict(to_addrs=[BOB], subject='pytest', body='it works!')),
+])
+def test_run(argv, email_attrs):
+    run_and_wait(process=Mock(), argv=argv)
+    assert_sent_email(**email_attrs)
