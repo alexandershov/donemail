@@ -158,3 +158,10 @@ def test_run_true(monkeypatch):
                  process=Mock(),
                  argv=['', BOB, 'true'])
     assert_sent_email(to_addrs=[BOB], subject='`true` exited with status code 0')
+
+
+def test_run_false(monkeypatch):
+    run_and_wait(monkeypatch,
+                 process=Mock(),
+                 argv=['', BOB, 'false'])
+    assert_sent_email(to_addrs=[BOB], subject='`false` exited with status code 1')

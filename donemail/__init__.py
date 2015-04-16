@@ -89,7 +89,6 @@ def main():
         wait_pid(args.pid)
         subject = 'process with pid {:d} exited'.format(args.pid)
     else:
-        # TODO: send stdin and stderr if status_code != 0
         cmd = [args.command] + args.command_args
         status_code = subprocess.call(cmd)
         subject = '`{}` exited with status code {:d}'.format(
