@@ -158,5 +158,5 @@ def test_wait_pid_that_doesnt_exist():
      dict(to_addrs=[BOB], subject='pytest', body='it works!')),
 ])
 def test_run(args, email_attrs):
-    run_and_wait(process=Mock(), args=args)
+    main(args)
     assert_sent_email(**email_attrs)
