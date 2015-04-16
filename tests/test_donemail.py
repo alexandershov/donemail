@@ -151,3 +151,10 @@ def test_wait_pid_that_doesnt_exist(monkeypatch):
                  process=Mock(),
                  argv=['', '--pid', str(pid_that_doesnt_exist), BOB])
     assert_num_emails(0)
+
+
+def test_run_true(monkeypatch):
+    run_and_wait(monkeypatch,
+                 process=Mock(),
+                 argv=['', BOB, 'true'])
+    assert_sent_email(to_addrs=[BOB], subject='`true` exited with status code 0')

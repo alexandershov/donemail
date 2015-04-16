@@ -92,7 +92,7 @@ def main():
         # TODO: send stdin and stderr if status_code != 0
         cmd = [args.command] + args.command_args
         status_code = subprocess.call(cmd)
-        subject = '{} exited with the code = {:d}'.format(
+        subject = '`{}` exited with status code {:d}'.format(
             ' '.join(cmd), status_code)
     donemail(to=args.email, body=args.body,
              subject=(args.subject or subject)).send_email()
