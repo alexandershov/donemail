@@ -4,6 +4,7 @@ import subprocess
 import threading
 
 from mock import ANY, Mock
+from _pytest.monkeypatch import monkeypatch
 import pytest
 
 from donemail import donemail, main
@@ -122,54 +123,55 @@ def process():
     return subprocess.Popen(['sleep', '0.5'])
 
 
-def test_wait_pid(monkeypatch, process):
-    run_and_wait(monkeypatch, process,
+def test_wait_pid(process):
+    run_and_wait(process,
                  ['', '--pid', str(process.pid), BOB])
     assert_sent_email(to_addrs=[BOB],
                       subject='process with pid {:d} exited'.format(process.pid))
 
 
-def run_and_wait(monkeypatch, process, argv):
-    monkeypatch.setattr('sys.argv', argv)
-    waiting_thread = threading.Thread(target=main)
-    waiting_thread.start()
-    process.wait()
-    waiting_thread.join()
+def run_and_wait(process, argv):
+    try:
+        patch = monkeypatch()
+        patch.setattr('sys.argv', argv)
+        waiting_thread = threading.Thread(target=main)
+        waiting_thread.start()
+        process.wait()
+        waiting_thread.join()
+    finally:
+        patch.undo()
 
 
-def test_wait_pid_subject_body(monkeypatch, process):
-    run_and_wait(monkeypatch, process,
+def test_wait_pid_subject_body(process):
+    run_and_wait(process,
                  ['', '--pid', str(process.pid),
                   '--subject', 'pytest',
                   '--body', 'it works!', BOB])
     assert_sent_email(to_addrs=[BOB], subject='pytest', body='it works!')
 
 
-def test_wait_pid_that_doesnt_exist(monkeypatch):
+def test_wait_pid_that_doesnt_exist():
     pid_that_doesnt_exist = 2 ** 31 - 1
-    run_and_wait(monkeypatch,
-                 process=Mock(),
+    run_and_wait(process=Mock(),
                  argv=['', '--pid', str(pid_that_doesnt_exist), BOB])
     assert_num_emails(0)
 
 
 # TODO: DRY test_run_* up
 
-def test_run_true(monkeypatch):
-    run_and_wait(monkeypatch,
-                 process=Mock(),
+def test_run_true():
+    run_and_wait(process=Mock(),
                  argv=['', BOB, 'true'])
     assert_sent_email(to_addrs=[BOB], subject='`true` exited with status code 0')
 
 
-def test_run_false(monkeypatch):
-    run_and_wait(monkeypatch,
-                 process=Mock(),
+def test_run_false():
+    run_and_wait(process=Mock(),
                  argv=['', BOB, 'false'])
     assert_sent_email(to_addrs=[BOB], subject='`false` exited with status code 1')
 
 
-def test_run_subject_body(monkeypatch):
-    run_and_wait(monkeypatch, process=Mock(),
+def test_run_subject_body():
+    run_and_wait(process=Mock(),
                  argv=['', '--subject', 'pytest', '--body', 'it works!', BOB, 'true'])
     assert_sent_email(to_addrs=[BOB], subject='pytest', body='it works!')
