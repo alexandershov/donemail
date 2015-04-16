@@ -153,6 +153,8 @@ def test_wait_pid_that_doesnt_exist(monkeypatch):
     assert_num_emails(0)
 
 
+# TODO: DRY test_run_* up
+
 def test_run_true(monkeypatch):
     run_and_wait(monkeypatch,
                  process=Mock(),
@@ -165,3 +167,9 @@ def test_run_false(monkeypatch):
                  process=Mock(),
                  argv=['', BOB, 'false'])
     assert_sent_email(to_addrs=[BOB], subject='`false` exited with status code 1')
+
+
+def test_run_subject_body(monkeypatch):
+    run_and_wait(monkeypatch, process=Mock(),
+                 argv=['', '--subject', 'pytest', '--body', 'it works!', BOB, 'true'])
+    assert_sent_email(to_addrs=[BOB], subject='pytest', body='it works!')
