@@ -23,7 +23,7 @@ def add(x, y):
     return x + y
 
 
-@donemail(BOB, subject='pytest', body='it works!')
+@donemail(BOB, subject='decorator', body='decorator body')
 def mul(x, y):
     return x * y
 
@@ -40,9 +40,9 @@ def test_context_manager():
 
 
 def test_context_manager_subject_body():
-    with donemail(BOB, subject='pytest', body='it works!'):
+    with donemail(BOB, subject='with', body='with body'):
         pass
-    assert_sent_email(to_addrs=[BOB], subject='pytest', body='it works!')
+    assert_sent_email(to_addrs=[BOB], subject='with', body='with body')
 
 
 def assert_num_emails(expected_num_emails):
@@ -69,7 +69,7 @@ def test_decorator():
 
 def test_decorator_subject_body():
     mul(1, y=2)
-    assert_sent_email(to_addrs=[BOB], subject='pytest', body='it works!')
+    assert_sent_email(to_addrs=[BOB], subject='decorator', body='decorator body')
 
 
 def test_decorator_exception(donemailed_function):
@@ -98,7 +98,7 @@ class contains(object):
 
 def test_context_manager_exception():
     with pytest.raises(ZeroDivisionError):
-        with donemail(BOB, subject='pytest', body='it works!'):
+        with donemail(BOB, subject='with', body='with body'):
             1 / 0
     assert_sent_email(to_addrs=[BOB],
                       subject='block raised ZeroDivisionError',
@@ -139,9 +139,9 @@ def run_and_wait(process, args):
 def test_wait_pid_subject_body(process):
     run_and_wait(process,
                  ['--pid', str(process.pid),
-                  '--subject', 'pytest',
-                  '--body', 'it works!', BOB])
-    assert_sent_email(to_addrs=[BOB], subject='pytest', body='it works!')
+                  '--subject', 'wait',
+                  '--body', 'wait body', BOB])
+    assert_sent_email(to_addrs=[BOB], subject='wait', body='wait body')
 
 
 def test_wait_pid_that_doesnt_exist():
@@ -154,8 +154,8 @@ def test_wait_pid_that_doesnt_exist():
 @pytest.mark.parametrize('args, email_attrs', [
     ([BOB, 'true'], dict(to_addrs=[BOB], subject='`true` exited with status code 0')),
     ([BOB, 'false'], dict(to_addrs=[BOB], subject='`false` exited with status code 1')),
-    (['--subject', 'pytest', '--body', 'it works!', BOB, 'true'],
-     dict(to_addrs=[BOB], subject='pytest', body='it works!')),
+    (['--subject', 'run', '--body', 'run body', BOB, 'true'],
+     dict(to_addrs=[BOB], subject='run', body='run body')),
 ])
 def test_run(args, email_attrs):
     main(args)
