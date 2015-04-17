@@ -66,8 +66,10 @@ class donemail(object):
         msg['From'] = self._sender
         msg['Subject'] = subject or self._subject
         s = smtplib.SMTP('localhost')
-        s.sendmail(self._sender, [self._to], msg.as_string())
-        s.quit()
+        try:
+            s.sendmail(self._sender, [self._to], msg.as_string())
+        finally:
+            s.quit()
 
 
 def main(cmd_args=None):
