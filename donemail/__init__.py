@@ -26,23 +26,18 @@ class donemail(object):
         def donemail_function(*args, **kwargs):
             call_str = '{function}({args})'.format(
                 function=function.__name__, args=format_call_args(args, kwargs))
-            raised = False
             try:
                 result = function(*args, **kwargs)
-                subject = '{} returned {!r}'.format(call_str, result)
-                body = ''
             except Exception as exc:
-                raised = True
                 exc_type, exc_value, tb = sys.exc_info()
                 subject = '{} raised {}'.format(call_str, exc_type.__name__)
                 # tb_next is to hide the fact that we're inside of the decorator
                 body = '\n'.join(traceback.format_exception(exc_type, exc_value, tb.tb_next))
-            self.send_email(subject, body)
-            if raised:
-                # tb_next is to hide the fact that we're inside of the decorator
+                self.send_email(subject, body)
                 raise exc_type, exc_value, tb.tb_next
-            return result
-
+            else:
+                self.send_email('{} returned {!r}'.format(call_str, result))
+                return result
         return donemail_function
 
     def __enter__(self):
@@ -52,10 +47,9 @@ class donemail(object):
         if exc_val is not None:
             subject = 'block raised {}'.format(exc_type.__name__)
             body = '\n'.join(traceback.format_exception(exc_type, exc_val, exc_tb))
+            self.send_email(subject, body)
         else:
-            subject = 'done'
-            body = ''
-        self.send_email(subject, body)
+            self.send_email(subject='done')
 
     def send_email(self, subject='', body=''):
         msg = MIMEText(self._body or body)
