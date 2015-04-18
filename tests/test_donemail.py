@@ -98,7 +98,7 @@ class contains(object):
 
 def test_context_manager_exception():
     with pytest.raises(ZeroDivisionError):
-        with donemail(BOB, subject='with', body='with body'):
+        with donemail(BOB):
             1 / 0
     assert_sent_email(to_addrs=[BOB],
                       subject='block raised ZeroDivisionError',

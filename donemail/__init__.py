@@ -37,8 +37,7 @@ class donemail(object):
                 subject = '{} raised {}'.format(call_str, exc_type.__name__)
                 # tb_next is to hide the fact that we're inside of the decorator
                 body = '\n'.join(traceback.format_exception(exc_type, exc_value, tb.tb_next))
-            self.send_email(self._subject or subject,
-                            self._body or body)
+            self.send_email(subject, body)
             if raised:
                 # tb_next is to hide the fact that we're inside of the decorator
                 raise exc_type, exc_value, tb.tb_next
@@ -54,17 +53,17 @@ class donemail(object):
             subject = 'block raised {}'.format(exc_type.__name__)
             body = '\n'.join(traceback.format_exception(exc_type, exc_val, exc_tb))
         else:
-            # TODO: clean up every self._subject or '' and '' or self._subject
-            subject = self._subject or 'done'
-            body = self._body or ''
+            subject = 'done'
+            body = ''
         self.send_email(subject, body)
 
     def send_email(self, subject='', body=''):
-        msg = MIMEText(body or self._body)
+        msg = MIMEText(self._body or body)
         # TODO: do we need both msg['To'] and sendmail(..., [self._to], ...)?
         msg['To'] = self._to
         msg['From'] = self._sender
-        msg['Subject'] = subject or self._subject
+        msg['Subject'] = self._subject or subject
+        # TODO: handle bad connection gracefully
         s = smtplib.SMTP('localhost')
         try:
             s.sendmail(self._sender, [self._to], msg.as_string())
