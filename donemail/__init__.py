@@ -19,16 +19,12 @@ class donemail(object):
         self._to = to
         self._subject = subject
         self._body = body
-        self._sender = sender or donemail._get_default_sender()
-
-    @staticmethod
-    def _get_default_sender():
-        return 'donemail@{}'.format(socket.gethostname())
+        self._sender = sender or _get_default_sender()
 
     def __call__(self, function):
         @wraps(function)
         def donemail_function(*args, **kwargs):
-            call_str = make_call_str(function, args, kwargs)
+            call_str = _make_call_str(function, args, kwargs)
             try:
                 result = function(*args, **kwargs)
             except Exception as exc:
@@ -41,6 +37,7 @@ class donemail(object):
             else:
                 self.send_email('{} returned {!r}'.format(call_str, result))
                 return result
+
         return donemail_function
 
     def __enter__(self):
@@ -70,7 +67,7 @@ class donemail(object):
 
 def main(cmd_args=None):
     parser = argparse.ArgumentParser(prog='donemail')
-    parser.add_argument('email', type=email, help='address to send email to')
+    parser.add_argument('email', type=_email, help='address to send email to')
     parser.add_argument('--subject', help='subject of the email')
     parser.add_argument('--body', help='body of the email')
     group = parser.add_mutually_exclusive_group(required=True)
@@ -81,10 +78,10 @@ def main(cmd_args=None):
     args = parser.parse_args(cmd_args)
 
     if args.pid is not None:
-        if not pid_exists(args.pid):
+        if not _pid_exists(args.pid):
             sys.exit('pid {:d} doesn\'t exist'.format(args.pid))
         sys.stderr.write('waiting for pid {:d} to finish\n'.format(args.pid))
-        wait_pid(args.pid)
+        _wait_pid(args.pid)
         subject = 'process with pid {:d} exited'.format(args.pid)
     else:
         cmd = [args.command] + args.command_args
@@ -95,14 +92,14 @@ def main(cmd_args=None):
              subject=(args.subject or subject)).send_email()
 
 
-def email(s):
+def _email(s):
     if '@' not in s:
         raise argparse.ArgumentTypeError(
             'email should contain @. Got: {!r}'.format(s))
     return s
 
 
-def pid_exists(pid):
+def _pid_exists(pid):
     try:
         os.kill(pid, 0)
         return True
@@ -115,14 +112,18 @@ def pid_exists(pid):
 
 
 # TODO: make poll_interval_sec a command-line option
-def wait_pid(pid, poll_interval_sec=1):
-    while pid_exists(pid):
+def _wait_pid(pid, poll_interval_sec=1):
+    while _pid_exists(pid):
         time.sleep(poll_interval_sec)
 
 
-def make_call_str(function, args, kwargs):
+def _make_call_str(function, args, kwargs):
     args_part = map(repr, args)
     kwargs_part = ['{}={!r}'.format(name, value)
                    for name, value in kwargs.viewitems()]
     all_args_part = ', '.join(chain(args_part, kwargs_part))
     return '{}({})'.format(function.__name__, all_args_part)
+
+
+def _get_default_sender():
+    return 'donemail@{}'.format(socket.gethostname())
