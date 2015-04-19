@@ -46,10 +46,10 @@ class donemail(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_val is not None:
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_value is not None:
             subject = 'block raised {}'.format(exc_type.__name__)
-            body = '\n'.join(traceback.format_exception(exc_type, exc_val, exc_tb))
+            body = '\n'.join(traceback.format_exception(exc_type, exc_value, tb))
             self.send_email(subject, body)
         else:
             self.send_email(subject='done')
