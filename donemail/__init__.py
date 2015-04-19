@@ -28,8 +28,7 @@ class donemail(object):
     def __call__(self, function):
         @wraps(function)
         def donemail_function(*args, **kwargs):
-            call_str = '{function}({args})'.format(
-                function=function.__name__, args=format_call_args(args, kwargs))
+            call_str = make_call_str(function, args, kwargs)
             try:
                 result = function(*args, **kwargs)
             except Exception as exc:
@@ -121,8 +120,9 @@ def wait_pid(pid, poll_interval_sec=1):
         time.sleep(poll_interval_sec)
 
 
-def format_call_args(args, kwargs):
+def make_call_str(function, args, kwargs):
     args_part = map(repr, args)
     kwargs_part = ['{}={!r}'.format(name, value)
                    for name, value in kwargs.viewitems()]
-    return ', '.join(chain(args_part, kwargs_part))
+    all_args_part = ', '.join(chain(args_part, kwargs_part))
+    return '{}({})'.format(function.__name__, all_args_part)
