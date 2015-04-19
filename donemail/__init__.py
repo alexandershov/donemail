@@ -15,11 +15,15 @@ import errno
 # TODO: write docstrings
 
 class donemail(object):
-    def __init__(self, to, sender='', subject='', body=''):
+    def __init__(self, to, subject='', body='', sender=''):
         self._to = to
         self._subject = subject
         self._body = body
-        self._sender = sender or 'donemail@{}'.format(socket.gethostname())
+        self._sender = sender or donemail._get_default_sender()
+
+    @staticmethod
+    def _get_default_sender():
+        return 'donemail@{}'.format(socket.gethostname())
 
     def __call__(self, function):
         @wraps(function)
