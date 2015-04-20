@@ -15,6 +15,7 @@ import errno
 # TODO: write docstrings
 
 class donemail(object):
+    # TODO: allow to configure smtp connection
     def __init__(self, to, subject='', body='', sender=''):
         self._to = to
         self._subject = subject
@@ -73,6 +74,8 @@ def main(cmd_args=None):
     wait_parser = subparsers.add_parser(
         'wait', parents=[parent_parser],
         help='send an email after the process with the specified pid exits')
+    wait_parser.add_argument('--poll-interval', type=float, default=1.0,
+                             help='sleep duration (in seconds) between pid checks')
     wait_parser.add_argument('pid', type=int, help='pid to wait for')
     wait_parser.set_defaults(func=_wait_pid)
 
@@ -111,10 +114,8 @@ def _wait_pid(args, donemail_obj):
         sys.exit('pid {:d} doesn\'t exist'.format(args.pid))
     sys.stderr.write('waiting for pid {:d} to finish\n'.format(args.pid))
 
-    # TODO: make poll_interval_sec a command-line option
-    poll_interval_sec = 1
     while _pid_exists(args.pid):
-        time.sleep(poll_interval_sec)
+        time.sleep(args.poll_interval)
     subject = 'process with pid {:d} exited'.format(args.pid)
     donemail_obj.send_email(subject)
 
