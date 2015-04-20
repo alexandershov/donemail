@@ -30,11 +30,11 @@ with donemail('bob@example.com'):
 
 In command line:
 ```shell
-donemail bob@example.com sleep 10
+donemail run bob@example.com sleep 10
 ```
 
 or:
 ```shell
 # send email when pid 123 finishes
-donemail --pid 123 bob@example.com
+donemail wait bob@example.com 123
 ```
