@@ -67,29 +67,24 @@ class donemail(object):
 
 def main(cmd_args=None):
     parser = argparse.ArgumentParser(prog='donemail')
-    parser.add_argument('email', type=_email, help='address to send email to')
-    parser.add_argument('--subject', help='subject of the email')
-    parser.add_argument('--body', help='body of the email')
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--pid', type=int, help='pid to wait for')
-    group.add_argument('command', nargs='?', help='command to execute')
-    parser.add_argument('command_args', nargs=argparse.REMAINDER,
-                        help='command arguments')
-    args = parser.parse_args(cmd_args)
+    subparsers = parser.add_subparsers()
+    parent_parser = _get_parent_parser()
 
-    if args.pid is not None:
-        if not _pid_exists(args.pid):
-            sys.exit('pid {:d} doesn\'t exist'.format(args.pid))
-        sys.stderr.write('waiting for pid {:d} to finish\n'.format(args.pid))
-        _wait_pid(args.pid)
-        subject = 'process with pid {:d} exited'.format(args.pid)
-    else:
-        cmd = [args.command] + args.command_args
-        status_code = subprocess.call(cmd)
-        subject = '`{}` exited with status code {:d}'.format(
-            ' '.join(cmd), status_code)
-    donemail(to=args.email, body=args.body,
-             subject=(args.subject or subject)).send_email()
+    wait_parser = subparsers.add_parser(
+        'wait', parents=[parent_parser],
+        help='send an email after the process with the specified pid exits')
+    wait_parser.add_argument('pid', type=int, help='pid to wait for')
+    wait_parser.set_defaults(func=_wait_pid)
+
+    run_parser = subparsers.add_parser(
+        'run', parents=[parent_parser],
+        help='run a command and send an email after a command exits')
+    run_parser.add_argument('command', help='command to execute')
+    run_parser.add_argument('command_args', nargs=argparse.REMAINDER, help='command arguments')
+    run_parser.set_defaults(func=_run_command)
+    args = parser.parse_args(cmd_args)
+    donemail_obj = donemail(to=args.email, body=args.body, subject=args.subject)
+    args.func(args, donemail_obj)
 
 
 def _email(s):
@@ -111,10 +106,25 @@ def _pid_exists(pid):
         return False
 
 
-# TODO: make poll_interval_sec a command-line option
-def _wait_pid(pid, poll_interval_sec=1):
-    while _pid_exists(pid):
+def _wait_pid(args, donemail_obj):
+    if not _pid_exists(args.pid):
+        sys.exit('pid {:d} doesn\'t exist'.format(args.pid))
+    sys.stderr.write('waiting for pid {:d} to finish\n'.format(args.pid))
+
+    # TODO: make poll_interval_sec a command-line option
+    poll_interval_sec = 1
+    while _pid_exists(args.pid):
         time.sleep(poll_interval_sec)
+    subject = 'process with pid {:d} exited'.format(args.pid)
+    donemail_obj.send_email(subject)
+
+
+def _run_command(args, donemail_obj):
+    cmd = [args.command] + args.command_args
+    status_code = subprocess.call(cmd)
+    subject = '`{}` exited with status code {:d}'.format(
+        ' '.join(cmd), status_code)
+    donemail_obj.send_email(subject)
 
 
 def _make_call_str(function, args, kwargs):
@@ -127,3 +137,11 @@ def _make_call_str(function, args, kwargs):
 
 def _get_default_sender():
     return 'donemail@{}'.format(socket.gethostname())
+
+
+def _get_parent_parser():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('email', type=_email, help='address to send email to')
+    parser.add_argument('--subject', help='subject of the email')
+    parser.add_argument('--body', help='body of the email')
+    return parser

@@ -124,7 +124,7 @@ def process():
 
 def test_wait_pid(process):
     run_and_wait(process,
-                 ['--pid', str(process.pid), BOB])
+                 ['wait', BOB, str(process.pid)])
     assert_sent_email(to_addrs=[BOB],
                       subject='process with pid {:d} exited'.format(process.pid))
 
@@ -138,23 +138,24 @@ def run_and_wait(process, args):
 
 def test_wait_pid_subject_body(process):
     run_and_wait(process,
-                 ['--pid', str(process.pid),
+                 ['wait',
                   '--subject', 'wait',
-                  '--body', 'wait body', BOB])
+                  '--body', 'wait body',
+                  BOB, str(process.pid)])
     assert_sent_email(to_addrs=[BOB], subject='wait', body='wait body')
 
 
 def test_wait_pid_that_doesnt_exist():
     pid_that_doesnt_exist = 2 ** 31 - 1
     run_and_wait(process=Mock(),
-                 args=['', '--pid', str(pid_that_doesnt_exist), BOB])
+                 args=['wait', BOB, str(pid_that_doesnt_exist)])
     assert_num_emails(0)
 
 
 @pytest.mark.parametrize('args, email_attrs', [
-    ([BOB, 'true'], dict(to_addrs=[BOB], subject='`true` exited with status code 0')),
-    ([BOB, 'false'], dict(to_addrs=[BOB], subject='`false` exited with status code 1')),
-    (['--subject', 'run', '--body', 'run body', BOB, 'true'],
+    (['run', BOB, 'true'], dict(to_addrs=[BOB], subject='`true` exited with status code 0')),
+    (['run', BOB, 'false'], dict(to_addrs=[BOB], subject='`false` exited with status code 1')),
+    (['run', '--subject', 'run', '--body', 'run body', BOB, 'true'],
      dict(to_addrs=[BOB], subject='run', body='run body')),
 ])
 def test_run(args, email_attrs):
