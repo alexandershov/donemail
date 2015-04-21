@@ -31,7 +31,7 @@ class donemail(object):
             call_str = _make_call_str(function, args, kwargs)
             try:
                 result = function(*args, **kwargs)
-            except Exception as exc:
+            except Exception:
                 exc_type, exc_value, tb = sys.exc_info()
                 subject = '{} raised {}'.format(call_str, exc_type.__name__)
                 # tb_next is to hide the fact that we're inside of the decorator

@@ -28,11 +28,6 @@ def mul(x, y):
     return x * y
 
 
-@pytest.fixture(params=[add, mul])
-def donemailed_function(request):
-    return request.param
-
-
 def test_context_manager():
     with donemail(BOB):
         pass
@@ -72,23 +67,23 @@ def test_decorator_subject_body():
     assert_sent_email(to_addrs=[BOB], subject='decorator', body='decorator body')
 
 
-def test_decorator_exception(donemailed_function):
+def test_decorator_exception():
     with pytest.raises(TypeError):
         add(1, None)
     assert_sent_email(to_addrs=[BOB],
                       subject='add(1, None) raised TypeError',
                       # checking that body ignores decorator frame
-                      body=~contains('donemail_function'))
-    assert_sent_email(body=contains('TypeError'))
+                      body=~Contains('donemail_function'))
+    assert_sent_email(body=Contains('TypeError'))
 
 
-class contains(object):
+class Contains(object):
     def __init__(self, substring, inverted=False):
         self._substring = substring
         self._inverted = inverted
 
     def __invert__(self):
-        return contains(self._substring, inverted=not self._inverted)
+        return Contains(self._substring, inverted=not self._inverted)
 
     def __eq__(self, string):
         if self._inverted:
@@ -97,12 +92,12 @@ class contains(object):
 
 
 def test_context_manager_exception():
-    with pytest.raises(ZeroDivisionError):
+    with pytest.raises(ValueError):
         with donemail(BOB):
-            1 / 0
+            raise ValueError
     assert_sent_email(to_addrs=[BOB],
-                      subject='block raised ZeroDivisionError',
-                      body=contains('ZeroDivisionError'))
+                      subject='block raised ValueError',
+                      body=Contains('ValueError'))
 
 
 def test_decorator_with_exception():
