@@ -14,6 +14,9 @@ import errno
 # TODO: refactor everything
 # TODO: write docstrings
 
+__all__ = ['donemail']
+
+
 class donemail(object):
     # TODO: allow to configure smtp connection
     def __init__(self, to, subject='', body='', sender=''):
