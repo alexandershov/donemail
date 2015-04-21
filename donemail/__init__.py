@@ -11,8 +11,6 @@ import time
 import traceback
 import errno
 
-# TODO: refactor everything
-# TODO: write docstrings
 
 __all__ = ['donemail']
 
@@ -20,12 +18,42 @@ __all__ = ['donemail']
 class donemail(object):
     # TODO: allow to configure smtp connection
     def __init__(self, to, subject='', body='', sender=''):
+        """
+        :param to: email address to send emails to
+        :param subject: subject of the email. Will be set to appropriate value if not specified.
+          Appropriate value for the:
+          * decorator (@donemail) is 'function X returned Y'
+            or 'function X raised Y' if decoratee raised an exception.
+          * context manager (with donemail(...)) is 'done'
+            or 'block raised Y' if block raised an exception.
+          * command line invocation (donemail wait) is
+            'process with pid X exited'.
+          * command line invocation (donemail run) is
+            'X exited with status code Y'
+        :param body: body of the email. Will be set to appropriate value if not specified.
+          Appropriate value for the:
+          * decorator (@donemail) is empty string
+            or a traceback if decoratee raised an exception.
+          * context manager (with donemail(...)) is empty string
+            or a traceback if block raised an exception.
+          * command line invocation (donemail wait) is empty string.
+          * command line invocation (donemail run) is empty string.
+        :param sender: sender of the email. 'donemail@your-host' by default.
+        """
         self._to = to
         self._subject = subject
         self._body = body
         self._sender = sender or _get_default_sender()
 
     def __call__(self, function):
+        """
+        A decorator. Return a version of function that sends an email on completion/exception.
+        Decorated function reraises all exceptions raised by function.
+        See donemail.__init__ for more details on email subject/body.
+
+        :param function: function to decorate
+        :return: function that sends an email on completion/exception.
+        """
         @wraps(function)
         def donemail_function(*args, **kwargs):
             call_str = _make_call_str(function, args, kwargs)
@@ -48,6 +76,10 @@ class donemail(object):
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
+        """
+        Send an email with the exception (if any) details.
+        See donemail.__init__ for more details on email subject/body.
+        """
         if exc_value is not None:
             subject = 'block raised {}'.format(exc_type.__name__)
             body = '\n'.join(traceback.format_exception(exc_type, exc_value, tb))
@@ -56,6 +88,11 @@ class donemail(object):
             self.send_email(subject='done')
 
     def send_email(self, subject='', body=''):
+        """
+        Send an email to self._to
+        :param subject: if self._subject is empty then this will be a subject of the email
+        :param body: if self._body is empty then this will be a body of the email
+        """
         msg = MIMEText(self._body or body)
         # TODO: do we need both msg['To'] and sendmail(..., [self._to], ...)?
         msg['To'] = self._to
@@ -70,6 +107,9 @@ class donemail(object):
 
 
 def main(cmd_args=None):
+    """
+    CLI entry point to donemail. Wait for a pid or run a command.
+    """
     parser = argparse.ArgumentParser(prog='donemail')
     subparsers = parser.add_subparsers()
     parent_parser = _get_parent_parser()
@@ -113,6 +153,10 @@ def _pid_exists(pid):
 
 
 def _wait_pid(args, donemail_obj):
+    """
+    Send an email after the process with the specified pid exits.
+    See donemail.__init__ for more details on email subject/body.
+    """
     if not _pid_exists(args.pid):
         sys.exit('pid {:d} doesn\'t exist'.format(args.pid))
     sys.stderr.write('waiting for pid {:d} to finish\n'.format(args.pid))
@@ -124,6 +168,10 @@ def _wait_pid(args, donemail_obj):
 
 
 def _run_command(args, donemail_obj):
+    """
+    Run the specified command and send email after it exits.
+    See donemail.__init__ for more details on email subject/body.
+    """
     cmd = [args.command] + args.command_args
     status_code = subprocess.call(cmd)
     subject = '`{}` exited with status code {:d}'.format(
