@@ -4,8 +4,7 @@ Donemail sends you an email when some function/code/script completes.
 
 ## Install
 ```shell
-git clone https://github.com/alexandershov/donemail
-cd donemail && python setup.py install
+pip install donemail
 ```
 
 ## Usage
