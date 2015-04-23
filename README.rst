@@ -1,5 +1,5 @@
 .. image:: https://travis-ci.org/alexandershov/donemail.svg?branch=master
-:target: https://travis-ci.org/alexandershov/donemail
+   :target: https://travis-ci.org/alexandershov/donemail
 
 What is it?
 ===========
