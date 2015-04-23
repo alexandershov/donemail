@@ -5,7 +5,7 @@ setup(
     name='donemail',
     author='Alexander Ershov',
     author_email='codumentary.com@gmail.com',
-    version='0.1.1',
+    version='0.1.2',
     packages=find_packages(),
     entry_points={
         'console_scripts': [
