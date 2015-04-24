@@ -7,6 +7,7 @@ setup(
     author_email='codumentary.com@gmail.com',
     version='0.1.2',
     packages=find_packages(),
+    install_requires=['six'],
     entry_points={
         'console_scripts': [
             'donemail = donemail:main'
@@ -14,5 +15,8 @@ setup(
     },
     url='https://github.com/alexandershov/donemail',
     keywords=['email', 'notify'],
-    classifiers=['Programming Language :: Python :: 2.7'],
+    classifiers=[
+        'Programming Language :: Python :: 2.7'
+        'Programming Language :: Python :: 3.4'
+    ],
 )

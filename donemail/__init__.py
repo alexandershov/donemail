@@ -11,6 +11,8 @@ import time
 import traceback
 import errno
 
+import six
+
 
 __all__ = ['donemail']
 
@@ -65,7 +67,7 @@ class donemail(object):
                 # tb_next is to hide the fact that we're inside of the decorator
                 body = '\n'.join(traceback.format_exception(exc_type, exc_value, tb.tb_next))
                 self.send_email(subject, body)
-                raise exc_type, exc_value, tb.tb_next
+                six.reraise(exc_type, exc_value, tb.tb_next)
             else:
                 self.send_email('{} returned {!r}'.format(call_str, result))
                 return result
@@ -182,7 +184,7 @@ def _run_command(args, donemail_obj):
 def _make_call_str(function, args, kwargs):
     args_part = map(repr, args)
     kwargs_part = ['{}={!r}'.format(name, value)
-                   for name, value in kwargs.viewitems()]
+                   for name, value in six.viewitems(kwargs)]
     all_args_part = ', '.join(chain(args_part, kwargs_part))
     return '{}({})'.format(function.__name__, all_args_part)
 
