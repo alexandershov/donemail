@@ -118,12 +118,12 @@ def process():
 
 
 def test_wait_pid(process):
-    donemail_wait(process, BOB)
+    donemail_wait(BOB, process)
     assert_sent_email(to_addrs=[BOB],
                       subject='process with pid {:d} exited'.format(process.pid))
 
 
-def donemail_wait(process, to_addr, subject='', body=''):
+def donemail_wait(to_addr, process, subject='', body=''):
     cmd_args = ['wait', '--subject', subject, '--body', body, to_addr, str(process.pid)]
     waiting_thread = threading.Thread(target=main, args=[cmd_args])
     waiting_thread.start()
@@ -132,14 +132,13 @@ def donemail_wait(process, to_addr, subject='', body=''):
 
 
 def test_wait_pid_subject_body(process):
-    donemail_wait(process, BOB, subject='wait', body='wait body')
+    donemail_wait(BOB, process, subject='wait', body='wait body')
     assert_sent_email(to_addrs=[BOB], subject='wait', body='wait body')
 
 
 def test_wait_pid_that_doesnt_exist():
     pid_that_doesnt_exist = 2 ** 31 - 1
-    process = Mock(pid=pid_that_doesnt_exist)
-    donemail_wait(process, BOB)
+    donemail_wait(BOB, process=Mock(pid=pid_that_doesnt_exist))
     assert_num_emails(0)
 
 
