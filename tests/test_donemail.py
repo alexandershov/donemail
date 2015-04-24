@@ -143,12 +143,21 @@ def test_wait_pid_that_doesnt_exist():
     assert_num_emails(0)
 
 
-@pytest.mark.parametrize('args, expected_email_attrs', [
-    (['run', BOB, 'true'], dict(to_addrs=[BOB], subject='`true` exited with status code 0')),
-    (['run', BOB, 'false'], dict(to_addrs=[BOB], subject='`false` exited with status code 1')),
-    (['run', '--subject', 'run', '--body', 'run body', BOB, 'true'],
-     dict(to_addrs=[BOB], subject='run', body='run body')),
-])
-def test_run(args, expected_email_attrs):
+def test_run_zero_status_code():
+    donemail_run(BOB, ['true'])
+    assert_sent_email(to_addrs=[BOB], subject='`true` exited with status code 0')
+
+
+def test_run_non_zero_status_code():
+    donemail_run(BOB, ['false'])
+    assert_sent_email(to_addrs=[BOB], subject='`false` exited with status code 1')
+
+
+def test_run_subject_body():
+    donemail_run(BOB, ['true'], subject='run', body='run body')
+    assert_sent_email(to_addrs=[BOB], subject='run', body='run body')
+
+
+def donemail_run(to_addr, cmd, subject='', body=''):
+    args = ['run', '--subject', subject, '--body', body, to_addr] + cmd
     main(args)
-    assert_sent_email(**expected_email_attrs)
