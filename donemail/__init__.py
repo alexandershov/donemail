@@ -11,15 +11,17 @@ import time
 import traceback
 import errno
 
+from six.moves.urllib.parse import urlparse
 import six
 
 
 __all__ = ['donemail']
 
+_DEFAULT_SMTP_URL = 'smtp://localhost:25'
+
 
 class donemail(object):
-    # TODO: allow to configure smtp connection
-    def __init__(self, to, subject='', body='', sender=''):
+    def __init__(self, to, subject='', body='', sender='', smtp=_DEFAULT_SMTP_URL):
         """
         :param to: email address to send emails to
         :param subject: subject of the email. Will be set to appropriate value if not specified.
@@ -41,11 +43,14 @@ class donemail(object):
           * command line invocation (donemail wait) is empty string.
           * command line invocation (donemail run) is empty string.
         :param sender: sender of the email. 'donemail@your-host' by default.
+        :param smtp: connection string to SMTP server. Should start with 'smtp://'.
+          E.g: 'smtp://localhost:25'
         """
         self._to = to
         self._subject = subject
         self._body = body
         self._sender = sender or _get_default_sender()
+        self._smtp_url = urlparse(smtp)
 
     def __call__(self, function):
         """
@@ -56,6 +61,7 @@ class donemail(object):
         :param function: function to decorate
         :return: function that sends an email on completion/exception.
         """
+
         @wraps(function)
         def donemail_function(*args, **kwargs):
             call_str = _make_call_str(function, args, kwargs)
@@ -101,7 +107,7 @@ class donemail(object):
         msg['From'] = self._sender
         msg['Subject'] = self._subject or subject
         # TODO: handle bad connection gracefully
-        s = smtplib.SMTP('localhost')
+        s = smtplib.SMTP(self._smtp_url.hostname, self._smtp_url.port)
         try:
             s.sendmail(self._sender, [self._to], msg.as_string())
         finally:
@@ -131,7 +137,8 @@ def main(cmd_args=None):
     run_parser.add_argument('command_args', nargs=argparse.REMAINDER, help='command arguments')
     run_parser.set_defaults(func=_run_command)
     args = parser.parse_args(cmd_args)
-    donemail_obj = donemail(to=args.email, body=args.body, subject=args.subject)
+    donemail_obj = donemail(to=args.email, body=args.body, subject=args.subject,
+                            smtp=args.smtp)
     args.func(args, donemail_obj)
 
 
@@ -198,4 +205,7 @@ def _get_parent_parser():
     parser.add_argument('email', type=_email, help='address to send email to')
     parser.add_argument('--subject', help='subject of the email')
     parser.add_argument('--body', help='body of the email')
+    parser.add_argument('--smtp', default=_DEFAULT_SMTP_URL,
+                        help='address:port of SMTP server. Should start with smtp://\n'
+                             'Example: smtp://localhost:25')
     return parser
