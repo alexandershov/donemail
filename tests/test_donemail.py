@@ -157,6 +157,7 @@ def test_run_subject_body():
     assert_sent_email(to_addrs=[BOB], subject='run', body='run body')
 
 
+# TODO: build options better
 def donemail_run(to_addr, cmd, subject='', body='', smtp=None):
     options = ['--subject', subject, '--body', body]
     if smtp is not None:
@@ -166,5 +167,5 @@ def donemail_run(to_addr, cmd, subject='', body='', smtp=None):
 
 
 def test_smtp_option():
-    donemail_run(BOB, ['true'], smtp='smtp://localhost:3000')
+    donemail_run(BOB, ['true'], smtp='localhost:3000')
     smtplib.SMTP.assert_called_once_with('localhost', 3000)

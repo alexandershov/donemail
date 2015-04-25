@@ -1,3 +1,4 @@
+from collections import namedtuple
 from email.mime.text import MIMEText
 from functools import wraps
 from itertools import chain
@@ -17,11 +18,30 @@ import six
 
 __all__ = ['donemail']
 
-_DEFAULT_SMTP_URL = 'smtp://localhost:25'
+
+class Address(namedtuple('Address', ['host', 'port'])):
+    __slots__ = ()
+
+    @classmethod
+    def from_string(cls, host_port):
+        """
+        :param host_port: string of the form host:port. E.g: 'localhost:25'
+        """
+        host, _, port_s = host_port.partition(':')
+        if not port_s:
+            raise ValueError('bad address: {!r} doesn\'t have a port'.format(host_port))
+        try:
+            int(port_s)
+        except ValueError as exc:
+            six.raise_from(ValueError('bad port: {!r} (not an integer)'.format(port_s)), exc)
+        return cls(host=host, port=int(port_s))
+
+
+_DEFAULT_SMTP_ADDRESS = Address.from_string('localhost:25')
 
 
 class donemail(object):
-    def __init__(self, to, subject='', body='', sender='', smtp=_DEFAULT_SMTP_URL):
+    def __init__(self, to, subject='', body='', sender='', smtp_address=_DEFAULT_SMTP_ADDRESS):
         """
         :param to: email address to send emails to
         :param subject: subject of the email. Will be set to appropriate value if not specified.
@@ -43,14 +63,13 @@ class donemail(object):
           * command line invocation (donemail wait) is empty string.
           * command line invocation (donemail run) is empty string.
         :param sender: sender of the email. 'donemail@your-host' by default.
-        :param smtp: connection string to SMTP server. Should start with 'smtp://'.
-          E.g: 'smtp://localhost:25'
+        :param smtp_address: tuple (host, port)
         """
         self._to = to
         self._subject = subject
         self._body = body
         self._sender = sender or _get_default_sender()
-        self._smtp_url = urlparse(smtp)
+        self._smtp_address = Address(*smtp_address)
 
     def __call__(self, function):
         """
@@ -107,7 +126,7 @@ class donemail(object):
         msg['From'] = self._sender
         msg['Subject'] = self._subject or subject
         # TODO: handle bad connection gracefully
-        s = smtplib.SMTP(self._smtp_url.hostname, self._smtp_url.port)
+        s = smtplib.SMTP(self._smtp_address.host, self._smtp_address.port)
         try:
             s.sendmail(self._sender, [self._to], msg.as_string())
         finally:
@@ -138,7 +157,7 @@ def main(cmd_args=None):
     run_parser.set_defaults(func=_run_command)
     args = parser.parse_args(cmd_args)
     donemail_obj = donemail(to=args.email, body=args.body, subject=args.subject,
-                            smtp=args.smtp)
+                            smtp_address=args.smtp)
     args.func(args, donemail_obj)
 
 
@@ -205,7 +224,13 @@ def _get_parent_parser():
     parser.add_argument('email', type=_email, help='address to send email to')
     parser.add_argument('--subject', help='subject of the email')
     parser.add_argument('--body', help='body of the email')
-    parser.add_argument('--smtp', default=_DEFAULT_SMTP_URL,
-                        help='address:port of SMTP server. Should start with smtp://\n'
-                             'Example: smtp://localhost:25')
+    parser.add_argument('--smtp', default=_DEFAULT_SMTP_ADDRESS, type=_address,
+                        help='host:port of SMTP server. Default: \'localhost:25\'')
     return parser
+
+
+def _address(host_port):
+    try:
+        return Address.from_string(host_port)
+    except ValueError as exc:
+        six.raise_from(argparse.ArgumentTypeError(exc.message), exc)
