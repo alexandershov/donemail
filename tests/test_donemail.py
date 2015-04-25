@@ -111,8 +111,6 @@ def test_decorator_with_exception():
     assert_sent_email(to_addrs=[BOB])
 
 
-# TODO: move these tests to a separate (integration) directory
-
 @pytest.fixture
 def process():
     return subprocess.Popen(['sleep', '0.5'])
