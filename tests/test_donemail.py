@@ -1,4 +1,5 @@
 import email
+import six
 import smtplib
 import subprocess
 import threading
@@ -123,8 +124,9 @@ def test_wait_pid(process):
                       subject='process with pid {:d} exited'.format(process.pid))
 
 
-def donemail_wait(to_addr, process, subject='', body=''):
-    cmd_args = ['wait', '--subject', subject, '--body', body, to_addr, str(process.pid)]
+def donemail_wait(to_addr, process, subject=None, body=None):
+    options = make_options_list(subject=subject, body=body)
+    cmd_args = ['wait'] + options + [to_addr, str(process.pid)]
     waiting_thread = threading.Thread(target=main, args=[cmd_args])
     waiting_thread.start()
     process.wait()
@@ -157,13 +159,18 @@ def test_run_subject_body():
     assert_sent_email(to_addrs=[BOB], subject='run', body='run body')
 
 
-# TODO: build options better
-def donemail_run(to_addr, cmd, subject='', body='', smtp=None):
-    options = ['--subject', subject, '--body', body]
-    if smtp is not None:
-        options.extend(['--smtp', smtp])
+def donemail_run(to_addr, cmd, subject=None, body=None, smtp=None):
+    options = make_options_list(subject=subject, body=body, smtp=smtp)
     args = ['run'] + options + [to_addr] + cmd
     main(args)
+
+
+def make_options_list(**kwargs):
+    options = []
+    for name, value in six.viewitems(kwargs):
+        if value:
+            options.extend(['--' + name, value])
+    return options
 
 
 def test_smtp_option():
