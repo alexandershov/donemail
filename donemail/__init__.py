@@ -18,7 +18,7 @@ import six
 __all__ = ['donemail']
 
 
-class Address(namedtuple('Address', ['host', 'port'])):
+class _Address(namedtuple('_Address', ['host', 'port'])):
     __slots__ = ()
 
     @classmethod
@@ -39,7 +39,7 @@ class Address(namedtuple('Address', ['host', 'port'])):
         return '{}:{}'.format(self.host, self.port)
 
 
-_DEFAULT_SMTP_ADDRESS = Address.from_string('localhost:25')
+_DEFAULT_SMTP_ADDRESS = _Address.from_string('localhost:25')
 
 
 class donemail(object):
@@ -71,7 +71,7 @@ class donemail(object):
         self._subject = subject
         self._body = body
         self._sender = sender or _get_default_sender()
-        self._smtp_address = Address(*smtp_address)
+        self._smtp_address = _Address(*smtp_address)
 
     def __call__(self, function):
         """
@@ -236,6 +236,6 @@ def _get_parent_parser():
 
 def _address(host_port):
     try:
-        return Address.from_string(host_port)
+        return _Address.from_string(host_port)
     except ValueError as exc:
         six.raise_from(argparse.ArgumentTypeError(exc.message), exc)
