@@ -123,14 +123,13 @@ class donemail(object):
         :param body: if self._body is empty then this will be a body of the email
         """
         msg = MIMEText(self._body or body)
-        # TODO: do we need both msg['To'] and sendmail(..., [self._to], ...)?
         msg['To'] = self._to
         msg['From'] = self._sender
         msg['Subject'] = self._subject or subject
         # TODO: handle bad connection gracefully
         s = smtplib.SMTP(self._smtp_address.host, self._smtp_address.port)
         try:
-            s.sendmail(self._sender, [self._to], msg.as_string())
+            s.sendmail(self._sender, self._to, msg.as_string())
         finally:
             s.quit()
 

@@ -32,22 +32,22 @@ def mul(x, y):
 def test_context_manager():
     with donemail(BOB):
         pass
-    assert_sent_email(to_addrs=[BOB])
+    assert_sent_email(to_addr=BOB)
 
 
 def test_context_manager_subject_body():
     with donemail(BOB, subject='with', body='with body'):
         pass
-    assert_sent_email(to_addrs=[BOB], subject='with', body='with body')
+    assert_sent_email(to_addr=BOB, subject='with', body='with body')
 
 
 def assert_num_emails(expected_num_emails):
     assert get_mock_smtp().sendmail.call_count == expected_num_emails
 
 
-def assert_sent_email(from_addr=ANY, to_addrs=ANY, subject=ANY, body=ANY):
+def assert_sent_email(from_addr=ANY, to_addr=ANY, subject=ANY, body=ANY):
     mock_smtp = get_mock_smtp()
-    mock_smtp.sendmail.assert_called_once_with(from_addr, to_addrs, ANY)
+    mock_smtp.sendmail.assert_called_once_with(from_addr, to_addr, ANY)
     _, _, mime_string = mock_smtp.sendmail.call_args[0]
     mime_message = email.message_from_string(mime_string)
     assert subject == mime_message['Subject']
@@ -60,18 +60,18 @@ def get_mock_smtp():
 
 def test_decorator():
     add(1, y=2)
-    assert_sent_email(to_addrs=[BOB], subject='add(1, y=2) returned 3')
+    assert_sent_email(to_addr=BOB, subject='add(1, y=2) returned 3')
 
 
 def test_decorator_subject_body():
     mul(1, y=2)
-    assert_sent_email(to_addrs=[BOB], subject='decorator', body='decorator body')
+    assert_sent_email(to_addr=BOB, subject='decorator', body='decorator body')
 
 
 def test_decorator_exception():
     with pytest.raises(TypeError):
         add(1, None)
-    assert_sent_email(to_addrs=[BOB],
+    assert_sent_email(to_addr=BOB,
                       subject='add(1, None) raised TypeError',
                       # checking that body ignores decorator frame
                       body=~Contains('donemail_function'))
@@ -96,7 +96,7 @@ def test_context_manager_exception():
     with pytest.raises(ValueError):
         with donemail(BOB):
             raise ValueError
-    assert_sent_email(to_addrs=[BOB],
+    assert_sent_email(to_addr=BOB,
                       subject='block raised ValueError',
                       body=Contains('ValueError'))
 
@@ -108,7 +108,7 @@ def test_decorator_with_exception():
 
     with pytest.raises(ZeroDivisionError):
         divide(1, 0)
-    assert_sent_email(to_addrs=[BOB])
+    assert_sent_email(to_addr=BOB)
 
 
 @pytest.fixture
@@ -118,7 +118,7 @@ def process():
 
 def test_wait_pid(process):
     donemail_wait(BOB, process)
-    assert_sent_email(to_addrs=[BOB],
+    assert_sent_email(to_addr=BOB,
                       subject='process with pid {:d} exited'.format(process.pid))
 
 
@@ -133,7 +133,7 @@ def donemail_wait(to_addr, process, subject=None, body=None):
 
 def test_wait_pid_subject_body(process):
     donemail_wait(BOB, process, subject='wait', body='wait body')
-    assert_sent_email(to_addrs=[BOB], subject='wait', body='wait body')
+    assert_sent_email(to_addr=BOB, subject='wait', body='wait body')
 
 
 def test_wait_pid_that_doesnt_exist():
@@ -144,17 +144,17 @@ def test_wait_pid_that_doesnt_exist():
 
 def test_run_zero_status_code():
     donemail_run(BOB, ['true'])
-    assert_sent_email(to_addrs=[BOB], subject='`true` exited with status code 0')
+    assert_sent_email(to_addr=BOB, subject='`true` exited with status code 0')
 
 
 def test_run_non_zero_status_code():
     donemail_run(BOB, ['false'])
-    assert_sent_email(to_addrs=[BOB], subject='`false` exited with status code 1')
+    assert_sent_email(to_addr=BOB, subject='`false` exited with status code 1')
 
 
 def test_run_subject_body():
     donemail_run(BOB, ['true'], subject='run', body='run body')
-    assert_sent_email(to_addrs=[BOB], subject='run', body='run body')
+    assert_sent_email(to_addr=BOB, subject='run', body='run body')
 
 
 def donemail_run(to_addr, cmd, subject=None, body=None, smtp=None):
