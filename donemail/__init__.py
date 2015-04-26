@@ -12,7 +12,6 @@ import time
 import traceback
 import errno
 
-from six.moves.urllib.parse import urlparse
 import six
 
 
@@ -35,6 +34,9 @@ class Address(namedtuple('Address', ['host', 'port'])):
         except ValueError as exc:
             six.raise_from(ValueError('bad port: {!r} (not an integer)'.format(port_s)), exc)
         return cls(host=host, port=int(port_s))
+
+    def __str__(self):
+        return '{}:{}'.format(self.host, self.port)
 
 
 _DEFAULT_SMTP_ADDRESS = Address.from_string('localhost:25')
@@ -145,7 +147,7 @@ def main(cmd_args=None):
         'wait', parents=[parent_parser],
         help='send an email after the process with the specified pid exits')
     wait_parser.add_argument('--poll-interval', type=float, default=1.0,
-                             help='sleep duration (in seconds) between pid checks')
+                             help=_with_default('sleep duration (in seconds) between pid checks'))
     wait_parser.add_argument('pid', type=int, help='pid to wait for')
     wait_parser.set_defaults(func=_wait_pid)
 
@@ -159,6 +161,10 @@ def main(cmd_args=None):
     donemail_obj = donemail(to=args.email, body=args.body, subject=args.subject,
                             smtp_address=args.smtp)
     args.func(args, donemail_obj)
+
+
+def _with_default(help_text):
+    return help_text + ' (default: %(default)s)'
 
 
 def _email(s):
@@ -225,7 +231,7 @@ def _get_parent_parser():
     parser.add_argument('--subject', help='subject of the email')
     parser.add_argument('--body', help='body of the email')
     parser.add_argument('--smtp', default=_DEFAULT_SMTP_ADDRESS, type=_address,
-                        help='host:port of SMTP server. Default: \'localhost:25\'')
+                        help=_with_default('host:port of SMTP server'))
     return parser
 
 
