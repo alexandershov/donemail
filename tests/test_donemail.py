@@ -123,8 +123,8 @@ def test_wait_pid(process):
                       subject='process with pid {:d} exited'.format(process.pid))
 
 
-def donemail_wait(to_addr, process, subject=None, body=None):
-    options = make_options_list(subject=subject, body=body)
+def donemail_wait(to_addr, process, subject=None, body=None, poll_interval=0.1):
+    options = make_options_list(subject=subject, body=body, poll_interval=poll_interval)
     cmd_args = ['wait'] + options + [to_addr, str(process.pid)]
     waiting_thread = threading.Thread(target=main, args=[cmd_args])
     waiting_thread.start()
@@ -168,8 +168,15 @@ def make_options_list(**kwargs):
     options = []
     for name, value in six.viewitems(kwargs):
         if value:
-            options.extend(['--' + name, value])
+            options.extend([make_option_name(name), str(value)])
     return options
+
+
+def make_option_name(name):
+    """
+    'poll_interval' -> '--poll-interval'
+    """
+    return '--' + name.replace('_', '-')
 
 
 def test_smtp_option():
