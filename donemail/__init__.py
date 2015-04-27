@@ -2,15 +2,15 @@ from collections import namedtuple
 from email.mime.text import MIMEText
 from functools import wraps
 from itertools import chain
-import smtplib
 import argparse
+import errno
 import os
+import smtplib
 import socket
 import subprocess
 import sys
 import time
 import traceback
-import errno
 
 import six
 

@@ -1,13 +1,14 @@
 import email
-import six
 import smtplib
 import subprocess
 import threading
 
 from mock import ANY, Mock
+import six
 import pytest
 
 from donemail import donemail, main
+
 
 BOB = 'bob@example.com'
 
