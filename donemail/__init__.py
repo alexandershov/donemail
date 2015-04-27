@@ -86,6 +86,7 @@ class donemail(object):
         @wraps(function)
         def donemail_function(*args, **kwargs):
             call_str = _make_call_str(function, args, kwargs)
+            # noinspection PyBroadException
             try:
                 result = function(*args, **kwargs)
             except Exception:
