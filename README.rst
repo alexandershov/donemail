@@ -18,6 +18,7 @@ You need a SMTP server running on port 25.
 In the command line:
 
 .. code-block:: shell
+
    # run command 'sleep 10' and send an email after it exits
    donemail run bob@example.com sleep 10
 
