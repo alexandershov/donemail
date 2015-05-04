@@ -15,9 +15,7 @@ BOB = 'bob@example.com'
 
 @pytest.fixture(autouse=True)
 def monkeypatch_smtplib(monkeypatch):
-    mock_smtp_class = Mock()
-    mock_smtp_class.return_value = Mock()
-    monkeypatch.setattr('smtplib.SMTP', mock_smtp_class)
+    monkeypatch.setattr('smtplib.SMTP', Mock())
 
 
 @donemail(BOB)
