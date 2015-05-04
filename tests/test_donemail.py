@@ -182,3 +182,29 @@ def make_option_name(name):
 def test_smtp_option():
     donemail_run(BOB, ['true'], smtp='localhost:3000')
     smtplib.SMTP.assert_called_once_with('localhost', 3000)
+
+
+DONT_USE_SMTPLIB_MOCK = pytest.mark.parametrize('monkeypatch_smtplib', [''])
+
+
+@DONT_USE_SMTPLIB_MOCK
+def test_doesnt_raise_with_smtplib_connect_error(monkeypatch):
+    monkeypatch.setattr('smtplib.SMTP', Mock(side_effect=Exception))
+    add(1, y=2)
+
+
+@DONT_USE_SMTPLIB_MOCK
+def test_doesnt_raise_with_smtplib_send_error(monkeypatch):
+    mock_smtp_class = Mock()
+    mock_smtp_class.return_value.sendmail = Exception
+    monkeypatch.setattr('smtplib.SMTP', mock_smtp_class)
+    add(1, y=2)
+
+
+@DONT_USE_SMTPLIB_MOCK
+def test_doesnt_raise_with_smtplib_quit_error(monkeypatch):
+    mock_smtp_class = Mock()
+    mock_smtp_class.return_value.quit = Exception
+    monkeypatch.setattr('smtplib.SMTP', mock_smtp_class)
+    add(1, y=2)
+

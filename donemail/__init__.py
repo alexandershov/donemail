@@ -4,6 +4,7 @@ from functools import wraps
 from itertools import chain
 import argparse
 import errno
+import logging
 import os
 import smtplib
 import socket
@@ -16,6 +17,10 @@ import six
 
 
 __all__ = ['donemail']
+
+
+class _SMTPConnectError(Exception):
+    pass
 
 
 class _Address(namedtuple('_Address', ['host', 'port'])):
@@ -120,6 +125,9 @@ class donemail(object):
     def send_email(self, subject='', body=''):
         """
         Send an email to self._to
+        Catch, log and don't reraise smtp errors (when server isn't running on
+        the specified host:port etc)
+
         :param subject: if self._subject is empty then this will be a subject of the email
         :param body: if self._body is empty then this will be a body of the email
         """
@@ -127,8 +135,17 @@ class donemail(object):
         msg['To'] = self._to
         msg['From'] = self._sender
         msg['Subject'] = self._subject or subject
-        # TODO: handle bad connection gracefully
-        s = smtplib.SMTP(self._smtp_address.host, self._smtp_address.port)
+        try:
+            self._send_message(msg)
+        except Exception:
+            logging.exception('donemail couldn\'t sent an email')
+
+    def _send_message(self, msg):
+        try:
+            s = smtplib.SMTP(self._smtp_address.host, self._smtp_address.port)
+        except Exception:
+            raise _SMTPConnectError('can\'t connect to smtp server on {}'.format(
+                self._smtp_address))
         try:
             s.sendmail(self._sender, self._to, msg.as_string())
         finally:
