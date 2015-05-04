@@ -179,7 +179,7 @@ def make_option_name(name):
     return '--' + name.replace('_', '-')
 
 
-def test_smtp_option():
+def test_run_smtp_option():
     donemail_run(BOB, ['true'], smtp='localhost:3000')
     smtplib.SMTP.assert_called_once_with('localhost', 3000)
 
