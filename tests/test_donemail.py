@@ -182,16 +182,16 @@ def test_run_smtp_option():
     smtplib.SMTP.assert_called_once_with('localhost', 3000)
 
 
-DONT_USE_SMTPLIB_MOCK = pytest.mark.parametrize('monkeypatch_smtplib', [''])
+disable_default_smtplib_monkeypatch = pytest.mark.parametrize('monkeypatch_smtplib', [''])
 
 
-@DONT_USE_SMTPLIB_MOCK
+@disable_default_smtplib_monkeypatch
 def test_doesnt_raise_with_smtplib_connect_error(monkeypatch):
     monkeypatch.setattr('smtplib.SMTP', Mock(side_effect=Exception))
     add(1, y=2)
 
 
-@DONT_USE_SMTPLIB_MOCK
+@disable_default_smtplib_monkeypatch
 def test_doesnt_raise_with_smtplib_send_error(monkeypatch):
     mock_smtp_class = Mock()
     mock_smtp_class.return_value.sendmail = Exception
@@ -199,7 +199,7 @@ def test_doesnt_raise_with_smtplib_send_error(monkeypatch):
     add(1, y=2)
 
 
-@DONT_USE_SMTPLIB_MOCK
+@disable_default_smtplib_monkeypatch
 def test_doesnt_raise_with_smtplib_quit_error(monkeypatch):
     mock_smtp_class = Mock()
     mock_smtp_class.return_value.quit = Exception
